@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+
+    <title>Smart Steer</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin: 0 auto;
+            max-width: 600px;
+            padding: 20px;
+            background-color: #feedff;
+            border: 1px solid #a3a3a3;
+
+        }
+        .verification-code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000000;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Email Verification</h1>
+    <h3>Dear [[${firstName}]],</h3>
+    <p>Thank you for registering. Please use the following verification code to verify your email address:</p>
+    <div class="verification-code">
+        <strong>[[${verificationCode}]]</strong>
+    </div>
+    <img src="https://i.imgur.com/Amln0C4.jpeg" width="450" height="250  ">
+    <p>Kind regards,</p>
+    <p>Smart Steer</p>
+</div>
+</body>
+</html>
