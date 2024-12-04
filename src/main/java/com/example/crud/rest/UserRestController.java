@@ -1,8 +1,8 @@
 package com.example.crud.rest;
 
 import com.example.crud.entity.Authority;
+import com.example.crud.entity.ResetPasswordRequest;
 import com.example.crud.entity.User;
-
 import com.example.crud.service.AuthorityService;
 import com.example.crud.service.EmailService;
 import com.example.crud.service.UserService;
@@ -14,10 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/GP")
@@ -31,25 +28,27 @@ public class UserRestController {
     private final PasswordEncoder passwordEncoder;
 
 
-    public UserRestController(UserService theUserService, AuthorityService authorityService, EmailService emailService, PasswordEncoder passwordEncoder) {
+    public UserRestController(UserService theUserService, AuthorityService authorityService, EmailService emailService, PasswordEncoder passwordEncoder,JwtUtil jwtUtil) {
         this.userService = theUserService;
         this.authorityService = authorityService;
-        this.emailService=emailService;
+        this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil=jwtUtil;
     }
-    @PostMapping("/signup")
-    public ResponseEntity<String> signUp(@RequestBody User user) throws MessagingException {
 
+    @PostMapping("/signup")
+    public ResponseEntity<Map<String, Object>> signUp(@RequestBody User user) throws MessagingException {
+        System.out.println("Received User Data: " + user);
+        Map<String, Object> response = new HashMap<>();
         String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
 
         if (!user.getPassword().matches(passwordPattern)) {
-            return ResponseEntity.badRequest().body("Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character.");
+            response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character.");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.badRequest().body(response);
         }
 
-        if (!user.getPassword().equals(user.getConfirmPass())) {
-            return ResponseEntity.badRequest().body("Passwords do not match.");
-        }
-        String username = userService.generateUsername(user.getFirstName(),user.getLastName());
+        String username = userService.generateUsername(user.getFirstName(), user.getLastName());
         user.setUsername(username);
 
         String verificationCode = VerificationUtil.generateVerificationCode();
@@ -59,59 +58,137 @@ public class UserRestController {
 
         String subject = "Email Verification";
         String body = "Please verify your email using this code: " + verificationCode;
+        emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), subject, body);
 
-        emailService.sendVerificationEmail(user.getEmail(),user.getFirstName(), subject, body);
-
-
-        return ResponseEntity.ok("Sign-up successful! Please verify your email.");
-
+        response.put("message", "Sign-up successful! Please verify your email.");
+        return ResponseEntity.ok(response);
     }
 
 
     @PostMapping("/verifyEmail")
-    public ResponseEntity<String> verifyEmail(@RequestParam String code) {
+    public ResponseEntity<Map<String, Object>> verifyEmail(@RequestParam String code) {
+        Map<String, Object> response = new HashMap<>();
 
         User user = userService.findByVerificationCode(code);
         if (user == null) {
-            return ResponseEntity.badRequest().body("Invalid verification code.");
+            response.put("message", "Invalid verification code.");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.badRequest().body(response);
         }
+
         user.setEmailVerified(true);
         user.setVerificationCode(null);
-        // userService.save(user);
-        User savedUser = userService.save(user);
-
 
         Authority auth = new Authority();
         auth.setUserId(user.getUsername());
         auth.setAuthority("ROLE_USER");
         authorityService.save(auth);
+
         String token = jwtUtil.generateToken(user.getUsername());
-        return ResponseEntity.ok("Email verified successfully!"+token);
+
+        response.put("message", "Email verified successfully!");
+        response.put("token", token);
+        return ResponseEntity.ok(response);
     }
 
 
-    // Login endpoint
+
+     //Login endpoint
     @PostMapping("/login")
-    public ResponseEntity<String> loginUser(@RequestBody User loginRequest) {
+    public ResponseEntity<Map<String, Object>> loginUser(@RequestBody User loginRequest) {
+        Map<String, Object> response = new HashMap<>();
+
         User user = userService.findByEmail(loginRequest.getEmail());
 
-        if (user != null && passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-
-            String token = jwtUtil.generateToken(user.getUsername());
-
-            return ResponseEntity.ok("Login successful for user: " + user.getUsername() + ", Token: " + token);
+        if (user == null) {
+            response.put("message", "Email not found.");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid login credentials.");
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            response.put("message", "Invalid password.");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        String token = jwtUtil.generateToken(user.getEmail());
+
+        response.put("message", "Login successful.");
+        response.put("token", token);
+
+        return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
+    @PostMapping("/forgot_password")
+    public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody User request) throws MessagingException {
+        Map<String, Object> response = new HashMap<>();
 
-        //token
+        User user = userService.findByEmail(request.getEmail());
+        if (user == null) {
+            response.put("message", "Email not found.");
+            response.put("status", HttpStatus.NOT_FOUND.value());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
 
-        return ResponseEntity.ok("User logged out successfully");
+        Random random = new Random();
+        int resetToken = 1000 + random.nextInt(9000); //number between 100000 and 999999
+        user.setResetToken(String.valueOf(resetToken));
+        user.setTokenExpiration(new Date(System.currentTimeMillis() + 15 * 60 * 1000)); //valid for 15 minute
+        userService.save(user);
+
+        String subject = "Password Reset Request";
+        String body = "Use this code to confirm your email: " + resetToken;
+        emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), subject, body);
+
+        response.put("message", "email confirmation code sent to your email.");
+        response.put("status", HttpStatus.OK.value());
+        return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/reset_password")
+    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody ResetPasswordRequest request) throws MessagingException {
+        Map<String, Object> response = new HashMap<>();
+
+        User user = userService.findByResetToken(request.getToken());
+        if (user == null || user.getTokenExpiration().before(new Date())) {
+            response.put("message", "Invalid or expired token.");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
+
+        if (!request.getNewPassword().matches(passwordPattern)) {
+            response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character.");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        user.setResetToken(null);
+        user.setTokenExpiration(null);
+        user.setUpdatedAt(new Date());
+        userService.save(user);
+
+        String subject = "Password changed successfully";
+        String body = "Your password has been reset successfully on " + user.getUpdatedAt() + ".";
+        emailService.passwordChangedEmail(user.getEmail(), user.getFirstName(), subject, body);
+
+        response.put("message", "Password reset successful.");
+        response.put("status", HttpStatus.OK.value());
+        return ResponseEntity.ok(response);
+    }
+
+
+
+
+
+
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////
     //get all users
     @GetMapping("/users")
     public List<User>findAll(){
@@ -129,42 +206,63 @@ public class UserRestController {
         return theUser;
     }
 
+    //delete user
+    @DeleteMapping("/users/{Id}")
+    public String delUser(@PathVariable int Id){
 
-    @PutMapping("/users")
-    public User updateUser(@PathVariable int userId, @RequestBody Map<String, Object> updates) {
-
-        // Fetch the existing user by ID
-        User existingUser = userService.findById(userId);
-        if (existingUser == null) {
-            throw new RuntimeException("User ID not found - " + userId);
+        User tempUser =userService.findById(Id);
+        if(tempUser==null){
+            throw new RuntimeException("user not found");
         }
-
-        updates.forEach((key, value) -> {
-            switch (key) {
-                case "firstName":
-                    existingUser.setFirstName((String) value);
-                    break;
-                case "lastName":
-                    existingUser.setLastName((String) value);
-                    break;
-                case "email":
-                    existingUser.setEmail((String) value);
-                    break;
-                case "password":
-                    existingUser.setPassword((String) value);
-                    break;
-
-                case "phone":
-                    existingUser.setPhone((String) value);
-                    break;
-
-                case "dob":
-                    existingUser.setDob((Date) value);
-            }
-        });
-
-        return userService.save(existingUser);
+        userService.deleteById(Id);
+        return "deleted user with id of "+Id;
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout() {
+
+        //token handling ......
+        //
+
+        return ResponseEntity.ok("User logged out successfully");
+    }
+
+
+//    @PutMapping("/users")
+//    public User updateUser(@PathVariable int userId, @RequestBody Map<String, Object> updates) {
+//
+//        // Fetch the existing user by ID
+//        User existingUser = userService.findById(userId);
+//        if (existingUser == null) {
+//            throw new RuntimeException("User ID not found - " + userId);
+//        }
+//
+//        updates.forEach((key, value) -> {
+//            switch (key) {
+//                case "firstName":
+//                    existingUser.setFirstName((String) value);
+//                    break;
+//                case "lastName":
+//                    existingUser.setLastName((String) value);
+//                    break;
+//                case "email":
+//                    existingUser.setEmail((String) value);
+//                    break;
+//                case "password":
+//                    existingUser.setPassword((String) value);
+//                    break;
+//
+//                case "phone":
+//                    existingUser.setPhone((String) value);
+//                    break;
+//
+//                case "dob":
+//                    existingUser.setDob((Date) value);
+//            }
+//        });
+//
+//        return userService.save(existingUser);
+//    }
 
     //update user
 //    @PutMapping("/users")
@@ -173,20 +271,6 @@ public class UserRestController {
 //        User updUser=userService.save(theUser);
 //        return updUser;
 //    }
-
-    //delete user
-    @DeleteMapping("/users/{Id}")
-     public String delUser(@PathVariable int Id){
-
-     User tempUser =userService.findById(Id);
-     if(tempUser==null){
-        throw new RuntimeException("user not found");
-     }
-     userService.deleteById(Id);
-     return "deleted user with id of "+Id;
-    }
-
-    //add new user (SIGN UP)
 
 
 }

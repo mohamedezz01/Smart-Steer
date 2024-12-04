@@ -12,4 +12,5 @@ public interface UserService {
     User findByEmail(String email);
     String generateUsername(String firstName, String Lastname);
     User findByVerificationCode(String code);
+    User findByResetToken(String resetToken);
 }

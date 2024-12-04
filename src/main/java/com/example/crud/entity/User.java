@@ -1,5 +1,6 @@
 package com.example.crud.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 
 import java.util.Date;
@@ -33,6 +34,7 @@ public class User {
     @Column(name = "phone")
     private String phone;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @Column(name = "date_of_birth")
     private Date dob;
 
@@ -50,22 +52,68 @@ public class User {
     private Gender gender;
 
 
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiry")
+    private Date resetTokenExpiry;
+
+    @Column(name = "token_expiration")
+    private Date tokenExpiration;
+
+    @Column(name = "updated_at")
+    private Date updatedAt;
+
 
     public User() {
     }
 
-    // Constructor for sign-up (all fields)
-    public User(String username, String email, String password,String confirmPass , String firstName, String lastName, Date dob, String phone, boolean isEmailVerified,Gender gender) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
+    public User(int id, String firstName, String lastName, String email, String password, String username, String phone, Date dob, boolean isEmailVerified, String verificationCode, Gender gender, String resetToken, Date resetTokenExpiry) {
+        this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.dob = dob;
+        this.email = email;
+        this.password = password;
+        this.username = username;
         this.phone = phone;
-        this.isEmailVerified=isEmailVerified;
-        this.confirmPass=confirmPass;
-        this.gender=gender;
+        this.dob = dob;
+        this.isEmailVerified = isEmailVerified;
+        this.verificationCode = verificationCode;
+        this.gender = gender;
+        this.resetToken = resetToken;
+        this.resetTokenExpiry = resetTokenExpiry;
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public Date getTokenExpiration() {
+        return tokenExpiration;
+    }
+
+    public void setTokenExpiration(Date tokenExpiration) {
+        this.tokenExpiration = tokenExpiration;
+    }
+
+    public String getResetToken() {
+        return resetToken;
+    }
+
+    public void setResetToken(String resetToken) {
+        this.resetToken = resetToken;
+    }
+
+    public Date getResetTokenExpiry() {
+        return resetTokenExpiry;
+    }
+
+    public void setResetTokenExpiry(Date resetTokenExpiry) {
+        this.resetTokenExpiry = resetTokenExpiry;
     }
 
     public Gender getGender() {
@@ -97,13 +145,6 @@ public class User {
         return phone;
     }
 
-    public String getConfirmPass() {
-        return confirmPass;
-    }
-
-    public void setConfirmPass(String confirmPass) {
-        this.confirmPass = confirmPass;
-    }
 
     public void setPhone(String phone) {
         this.phone = phone;
@@ -182,7 +223,6 @@ public class User {
                 ", dob=" + dob +
                 ", isEmailVerified=" + isEmailVerified +
                 ", verificationCode='" + verificationCode + '\'' +
-                ", confirmPass='" + confirmPass + '\'' +
                 ", gender=" + gender +
                 '}';
     }

@@ -35,12 +35,32 @@ public class EmailService implements EmailServ {
         helper.setSubject(subject);
         helper.setFrom("SmartSteer@outlook.com");
 
-        // for the thymeleaf template
+        // for thymeleaf template
         Context context = new Context();
         context.setVariable("verificationCode", verificationCode);
         context.setVariable("firstName", firstName);
-        // Render the email template with thymeleaf
+        // Render email template with thymeleaf
         String htmlContent = templateEngine.process("email", context);
+        helper.setText(htmlContent, true); // 'true' enables HTML content
+
+        mailSender.send(message);
+    }
+
+    @Override
+    public void passwordChangedEmail(String to, String firstName, String subject, String body) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        // email recipient, subject, and sender
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setFrom("SmartSteer@outlook.com");
+
+        // for thymeleaf template
+        Context context = new Context();
+        context.setVariable("firstName", firstName);
+        // Render email template with thymeleaf
+        String htmlContent = templateEngine.process("pass_email", context);
         helper.setText(htmlContent, true); // 'true' enables HTML content
 
         mailSender.send(message);

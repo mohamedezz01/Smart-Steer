@@ -5,5 +5,5 @@ import jakarta.mail.MessagingException;
 public interface EmailServ {
 
      void sendVerificationEmail(String to,String firstName, String subject, String body)throws MessagingException;
-
+     void passwordChangedEmail(String to,String firstName, String subject, String body)throws MessagingException;
 }

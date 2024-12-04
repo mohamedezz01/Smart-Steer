@@ -5,7 +5,6 @@ import com.example.crud.entity.User;
 import com.example.crud.util.VerificationUtil;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -34,8 +33,8 @@ public class UserServiceImpl implements UserService{
         String verificationCode = VerificationUtil.generateVerificationCode();
         user.setVerificationCode(verificationCode);
 
-        String encryptedPassword = passwordEncoder.encode(user.getPassword());
-        user.setPassword(encryptedPassword);
+//        String encryptedPassword = passwordEncoder.encode(user.getPassword());
+//        user.setPassword(encryptedPassword);
 
         userRepository.save(user);
 
@@ -73,7 +72,12 @@ public class UserServiceImpl implements UserService{
     public User findByVerificationCode(String verificationCode) {
         return userRepository.findByVerificationCode(verificationCode);
     }
-   
+
+    @Override
+    public User findByResetToken(String resetToken) {
+        return userRepository.findByResetToken(resetToken);
+    }
+
     @Override
     public void deleteById(int Id) {
         userRepository.deleteById(Id);
@@ -90,7 +94,6 @@ public class UserServiceImpl implements UserService{
         String username = baseUsername;
         int count = 1;
 
-        // Check if the username exists in the database
         while (userRepository.findByUsername(username) != null) {
             username = baseUsername + count;
             count++;

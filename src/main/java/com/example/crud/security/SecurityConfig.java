@@ -6,60 +6,46 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.JdbcUserDetailsManager;
-import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-
-import javax.sql.DataSource;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
-
-
-    @Bean
-    public UserDetailsManager userDetailsManager(DataSource dataSource) {
-
-        JdbcUserDetailsManager jdbcUserDetailsManager = new JdbcUserDetailsManager(dataSource);
-
-        jdbcUserDetailsManager.setUsersByUsernameQuery(
-                "select username, pass, enabled from users where username=?");
-
-        jdbcUserDetailsManager.setAuthoritiesByUsernameQuery(
-                "select user_id,authority from authorities where user_id =?");
-
-        return jdbcUserDetailsManager;
-    }
-
-
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http.authorizeHttpRequests(configurer ->
                 configurer
-                        .requestMatchers(HttpMethod.GET, "/GP/users").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/GP/users/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/GP/users").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/GP/users").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/GP/users/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/GP/login").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/GP/signup").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/GP/verifyEmail").permitAll()
-        );
-
-
-        // use HTTP Basic authentication
-        http.httpBasic(Customizer.withDefaults());
-
-        // disable Cross Site Request Forgery (CSRF)
-        // in general, not required for stateless REST APIs that use POST, PUT, DELETE and/or PATCH
-        http.csrf(csrf -> csrf.disable());
-
-        return http.build();
-    }
-
+                        // Public endpoints
+                        .requestMatchers(HttpMethod.POST, "/GP/signup", "/GP/login", "/GP/verifyEmail",
+                                "/GP/forgot_password", "/GP/reset_password","/GP/emergency/add").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/GP/users", "/GP/users/**","/GP/emergency/list").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/GP/users","/GP/emergency/update/{contactId}").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/GP/users/**","/GP/emergency/delete/{contactId}").permitAll()
+                        // Default rule for all other endpoints
+                        .anyRequest().authenticated());
+                        // Use HTTP Basic Auth for simplicity (can be customized for JWT)
+                        http.httpBasic(Customizer.withDefaults());
+                        // Disable CSRF for APIs
+                         http.csrf(csrf -> csrf.disable());
+                          return http.build();
+                 }
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("http://192.168.1.5"); // Replace with your mobile app's IP
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
