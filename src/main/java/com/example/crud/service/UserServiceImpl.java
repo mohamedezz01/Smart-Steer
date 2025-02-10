@@ -18,8 +18,7 @@ import java.util.Optional;
 
 @Service
 @Transactional
-public class userServiceImpl implements UserService {
-
+public class UserServiceImpl implements UserService { //changed class name to UserServiceImpl
 
     private UserRepository userRepository;
     private VerificationUtil verfificationUtil;
@@ -29,7 +28,7 @@ public class userServiceImpl implements UserService {
     private final JwtUtil jwtUtil;
 
     @Autowired
-    public userServiceImpl(UserRepository theUserRepository ,JwtUtil jwtUtil, PasswordEncoder passwordEncoder, EmailService emailService) {
+    public UserServiceImpl(UserRepository theUserRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, EmailService emailService) { // Updated constructor name
         this.userRepository = theUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
@@ -37,7 +36,6 @@ public class userServiceImpl implements UserService {
     }
 
     public void signUpUser(User user) throws MessagingException {
-
         String verificationCode = VerificationUtil.generateVerificationCode();
         user.setVerificationCode(verificationCode);
         if (!user.getPassword().startsWith("$2a$")) {
@@ -51,9 +49,7 @@ public class userServiceImpl implements UserService {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
         return userRepository.save(user);
-
     }
-
 
     @Override
     public void deleteById(int Id) {
@@ -67,7 +63,7 @@ public class userServiceImpl implements UserService {
 
     @Override
     public String generateUsername(String firstName, String lastName) {
-        String baseUsername = firstName.toLowerCase() + "_" +lastName.toLowerCase();
+        String baseUsername = firstName.toLowerCase() + "_" + lastName.toLowerCase();
         String username = baseUsername;
         int count = 1;
 
@@ -87,17 +83,15 @@ public class userServiceImpl implements UserService {
     public User findById(int Id) {
         Optional<User> Result = userRepository.findById(Id);
 
-        User user=null;
+        User user = null;
 
-        if (Result.isPresent()){
-            user=Result.get();
-        }
-        else {
+        if (Result.isPresent()) {
+            user = Result.get();
+        } else {
             throw new RuntimeException("didn't found the user id");
         }
         return user;
     }
-
 
     public User findByVerificationCode(String verificationCode) {
         return userRepository.findByVerificationCode(verificationCode);
@@ -110,7 +104,6 @@ public class userServiceImpl implements UserService {
 
     @Override
     public String updateUserFields(int userId, String firstName, String lastName, String phone, Date dob) {
-
         User user = findById(userId);
 
         if (firstName != null) user.setFirstName(firstName);
@@ -121,6 +114,7 @@ public class userServiceImpl implements UserService {
 
         return jwtUtil.generateToken(user.getEmail());
     }
+
     @Override
     public void changePassword(User user, String oldPassword, String newPassword) {
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
@@ -129,6 +123,7 @@ public class userServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
+
     @Override
     public void deleteAccount(User user, String password) {
         if (!passwordEncoder.matches(password, user.getPassword())) {
@@ -136,5 +131,4 @@ public class userServiceImpl implements UserService {
         }
         userRepository.delete(user);
     }
-
 }
