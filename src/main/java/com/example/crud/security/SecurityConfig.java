@@ -21,10 +21,11 @@ public class SecurityConfig {
                 configurer
                         // Public endpoints
                         .requestMatchers(HttpMethod.POST, "/GP/signup", "/GP/login", "/GP/verifyEmail",
-                                "/GP/forgot_password", "/GP/reset_password","/GP/emergency/add").permitAll()
+                                "/GP/forgot_password", "/GP/reset_password","/GP/emergency/add","/GP/confirm_reset_code","/GP/settings/verifyChangedEmail").permitAll()
                         .requestMatchers(HttpMethod.GET, "/GP/users", "/GP/users/**","/GP/emergency/list").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/GP/users","/GP/emergency/update/{contactId}").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/GP/users/**","/GP/emergency/delete/{contactId}").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/GP/users","/GP/emergency/update/{contactId}","/GP/settings/changeEmail","/GP/settings/changePassword").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/GP/users/**","/GP/emergency/delete/{contactId}","/GP/settings/deleteAccount").permitAll()
+                        .requestMatchers(HttpMethod.PATCH,"/GP/settings/updateInfo").permitAll()
                         // Default rule for all other endpoints
                         .anyRequest().authenticated());
                         // Use HTTP Basic Auth for simplicity (can be customized for JWT)
@@ -35,12 +36,17 @@ public class SecurityConfig {
                  }
     @Bean
     public PasswordEncoder passwordEncoder() {
+
         return new BCryptPasswordEncoder();
     }
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("http://192.168.1.5"); // Replace with your mobile app's IP
+        configuration.addAllowedOriginPattern("*"); // Debugging purpose, allow all origins
+
+//        configuration.addAllowedOrigin("http://192.168.1.9");
+//        configuration.addAllowedOrigin("http://192.168.1.9:8080"); //replace with the mobile app iP and port
+//        configuration.addAllowedOrigin("http://localhost:8080"); //allows localhost for development
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);
@@ -48,4 +54,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }

@@ -1,4 +1,4 @@
-package com.example.crud.rest;
+package com.example.crud.controllers;
 
 import com.example.crud.entity.EmergencyContact;
 import com.example.crud.entity.User;
@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

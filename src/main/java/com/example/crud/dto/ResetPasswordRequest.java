@@ -1,4 +1,4 @@
-package com.example.crud.entity;
+package com.example.crud.dto;
 
 public class ResetPasswordRequest {
 

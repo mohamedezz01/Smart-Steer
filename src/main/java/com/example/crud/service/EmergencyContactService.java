@@ -2,6 +2,7 @@ package com.example.crud.service;
 
 import com.example.crud.entity.EmergencyContact;
 
+import java.util.Date;
 import java.util.List;
 
 public interface EmergencyContactService {
@@ -10,6 +11,5 @@ public interface EmergencyContactService {
     EmergencyContact addContact(EmergencyContact contact);
 
     EmergencyContact findById(int id);
-
     void deleteContact(int contactId);
 }

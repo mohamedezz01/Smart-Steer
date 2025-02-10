@@ -1,7 +1,7 @@
-package com.example.crud.rest;
+package com.example.crud.controllers;
 
 import com.example.crud.entity.Authority;
-import com.example.crud.entity.ResetPasswordRequest;
+import com.example.crud.dto.ResetPasswordRequest;
 import com.example.crud.entity.User;
 import com.example.crud.service.AuthorityService;
 import com.example.crud.service.EmailService;
@@ -54,7 +54,9 @@ public class UserRestController {
         String verificationCode = VerificationUtil.generateVerificationCode();
         user.setVerificationCode(verificationCode);
         user.setEmailVerified(false);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userService.save(user);
+
 
         String subject = "Email Verification";
         String body = "Please verify your email using this code: " + verificationCode;
@@ -94,31 +96,31 @@ public class UserRestController {
 
 
      //Login endpoint
-    @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> loginUser(@RequestBody User loginRequest) {
-        Map<String, Object> response = new HashMap<>();
+     @PostMapping("/login")
+     public ResponseEntity<Map<String, Object>> loginUser(@RequestBody User loginRequest) {
+         Map<String, Object> response = new HashMap<>();
 
-        User user = userService.findByEmail(loginRequest.getEmail());
+         User user = userService.findByEmail(loginRequest.getEmail());
 
-        if (user == null) {
-            response.put("message", "Email not found.");
-            response.put("status", HttpStatus.UNAUTHORIZED.value());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        }
+         if (user == null) {
+             response.put("message", "Email not found.");
+             response.put("status", HttpStatus.UNAUTHORIZED.value());
+             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+         }
 
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            response.put("message", "Invalid password.");
-            response.put("status", HttpStatus.UNAUTHORIZED.value());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        }
+         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+             response.put("message", "Invalid password.");
+             response.put("status", HttpStatus.UNAUTHORIZED.value());
+             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+         }
 
-        String token = jwtUtil.generateToken(user.getEmail());
+         String token = jwtUtil.generateToken(user.getEmail());
 
-        response.put("message", "Login successful.");
-        response.put("token", token);
+         response.put("message", "Login successful.");
+         response.put("token", token);
 
-        return ResponseEntity.ok(response);
-    }
+         return ResponseEntity.ok(response);
+     }
 
     @PostMapping("/forgot_password")
     public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody User request) throws MessagingException {
@@ -132,7 +134,7 @@ public class UserRestController {
         }
 
         Random random = new Random();
-        int resetToken = 1000 + random.nextInt(9000); //number between 100000 and 999999
+        int resetToken = 1000 + random.nextInt(9000); //number between 1000 and 9999
         user.setResetToken(String.valueOf(resetToken));
         user.setTokenExpiration(new Date(System.currentTimeMillis() + 15 * 60 * 1000)); //valid for 15 minute
         userService.save(user);
@@ -146,38 +148,51 @@ public class UserRestController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/reset_password")
-    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody ResetPasswordRequest request) throws MessagingException {
+    @PostMapping("/confirm_reset_code")
+    public ResponseEntity<Map<String, Object>> confirmResetToken(@RequestBody Map<String, String> request) {
         Map<String, Object> response = new HashMap<>();
+        String code = request.get("token");
 
-        User user = userService.findByResetToken(request.getToken());
-        if (user == null || user.getTokenExpiration().before(new Date())) {
-            response.put("message", "Invalid or expired token.");
+        User user = userService.findByResetToken(code);
+        if (user == null || user.getResetToken() == null || user.getTokenExpiration().before(new Date())) {
+            response.put("message", "Invalid or expired code.");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
-        String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
+        response.put("message", "Code is valid.");
+        response.put("status", HttpStatus.OK.value());
+        return ResponseEntity.ok(response);
+    }
 
-        if (!request.getNewPassword().matches(passwordPattern)) {
-            response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character.");
-            response.put("status", HttpStatus.BAD_REQUEST.value());
-            return ResponseEntity.badRequest().body(response);
+    @PostMapping("/reset_password")
+    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody ResetPasswordRequest request) throws MessagingException {
+        Map<String, Object> response = new HashMap<>();
+        String code = request.getToken();
+        User user = userService.findByResetToken(code);
+
+        if (user == null || user.getResetToken() == null || user.getTokenExpiration().before(new Date())) {
+            response.put("message", "Invalid or expired code.");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         user.setResetToken(null);
         user.setTokenExpiration(null);
         user.setUpdatedAt(new Date());
         userService.save(user);
-
-        String subject = "Password changed successfully";
-        String body = "Your password has been reset successfully on " + user.getUpdatedAt() + ".";
+        // Send confirmation email
+        String subject = "Password Changed Successfully";
+        String body = "Your password has been changed successfully on " + user.getUpdatedAt() + ".";
         emailService.passwordChangedEmail(user.getEmail(), user.getFirstName(), subject, body);
 
         response.put("message", "Password reset successful.");
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
+
+
 
 
 
