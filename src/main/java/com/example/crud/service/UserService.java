@@ -19,7 +19,5 @@ public interface UserService {
      boolean changePassword(User user, String oldPassword, String newPassword);
     public boolean isPasswordValid(User user, String password);
     public void saveDeletionToken(User user, String deletionToken);
-
     public boolean isDeletionTokenValid(User user, String deletionToken);
-
 }
