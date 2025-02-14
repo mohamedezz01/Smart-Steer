@@ -7,18 +7,17 @@ import com.example.crud.util.VerificationUtil;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Transactional
-public class UserServiceImpl implements UserService { //changed class name to UserServiceImpl
+public class UserServiceImpl implements UserService {
 
     private UserRepository userRepository;
     private VerificationUtil verfificationUtil;
@@ -50,6 +49,21 @@ public class UserServiceImpl implements UserService { //changed class name to Us
         }
         return userRepository.save(user);
     }
+
+    @Override
+    public boolean isPasswordValid(User user, String password) {
+        return passwordEncoder.matches(password, user.getPassword()); // ✅ This is correct
+    }
+
+    @Override
+    public boolean changePassword(User user, String oldPassword, String newPassword) {
+        // No need to revalidate the old password (already checked in the controller)
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return true;
+    }
+
+
 
     @Override
     public void deleteById(int Id) {
@@ -115,20 +129,24 @@ public class UserServiceImpl implements UserService { //changed class name to Us
         return jwtUtil.generateToken(user.getEmail());
     }
 
+
+
     @Override
-    public void changePassword(User user, String oldPassword, String newPassword) {
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            throw new RuntimeException("Old password is incorrect.");
-        }
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
+    public void deleteAccount(User user) {
+        userRepository.delete(user);
     }
 
     @Override
-    public void deleteAccount(User user, String password) {
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("Password is incorrect.");
-        }
-        userRepository.delete(user);
+    public void saveDeletionToken(User user, String deletionToken) {
+        user.setDeletionToken(deletionToken);
+        user.setDeletionTokenExpiry(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(10))); // 10 min expiry
+        userRepository.save(user);
+    }
+    @Override
+    public boolean isDeletionTokenValid(User user, String deletionToken) {
+        return user.getDeletionToken() != null &&
+                user.getDeletionToken().equals(deletionToken) &&
+                user.getDeletionTokenExpiry() != null &&
+                user.getDeletionTokenExpiry().after(new Date()); // Check expiry
     }
 }

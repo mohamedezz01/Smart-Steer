@@ -29,6 +29,11 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
     }
 
     @Override
+    public boolean existsByPhoneAndUser(String phone, User user) {
+        return emergencyContactRepository.existsByPhoneAndUser(phone, user);
+    }
+
+    @Override
     public void deleteContact(int contactId) {
         emergencyContactRepository.deleteById(contactId);
     }

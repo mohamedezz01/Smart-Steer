@@ -20,11 +20,11 @@ public class SecurityConfig {
         http.authorizeHttpRequests(configurer ->
                 configurer
                         // Public endpoints
-                        .requestMatchers(HttpMethod.POST, "/GP/signup", "/GP/login", "/GP/verifyEmail",
-                                "/GP/forgot_password", "/GP/reset_password","/GP/emergency/add","/GP/confirm_reset_code","/GP/settings/verifyChangedEmail").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/GP/signup", "/GP/login", "/GP/verifyEmail","/GP/settings/verify_delAcc",
+                                "/GP/forgot_password", "/GP/reset_password","/GP/emergency/add","/GP/confirm_reset_code","/GP/settings/verifyChangedEmail","/GP/settings/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/GP/users", "/GP/users/**","/GP/emergency/list").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/GP/users","/GP/emergency/update/{contactId}","/GP/settings/changeEmail","/GP/settings/changePassword").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/GP/users/**","/GP/emergency/delete/{contactId}","/GP/settings/deleteAccount").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/GP/users/**","/GP/emergency/delete/{contactId}","/GP/settings/confirm_delAcc").permitAll()
                         .requestMatchers(HttpMethod.PATCH,"/GP/settings/updateInfo").permitAll()
                         // Default rule for all other endpoints
                         .anyRequest().authenticated());

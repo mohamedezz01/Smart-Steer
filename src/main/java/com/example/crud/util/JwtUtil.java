@@ -1,10 +1,13 @@
 package com.example.crud.util;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +21,8 @@ public class JwtUtil {
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
-
+    private final long DELETE_TOKEN_EXPIRATION = TimeUnit.MINUTES.toMillis(10); // 10 min expiry
+    private final SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
@@ -54,4 +58,28 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+
+    public String generateDeletionToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + DELETE_TOKEN_EXPIRATION))
+                .signWith(secretKey)
+                .compact();
+    }
+
+    public String validateDeletionToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims.getSubject(); // Returns the email if valid
+        } catch (JwtException | IllegalArgumentException e) {
+            return null; // Invalid or expired token
+        }
+    }
+
 }
