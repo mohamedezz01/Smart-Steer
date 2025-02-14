@@ -6,6 +6,7 @@ import com.example.crud.dto.DeleteAccountRequest;
 import com.example.crud.entity.User;
 import com.example.crud.service.AuthorityService;
 import com.example.crud.service.EmailService;
+import com.example.crud.service.TokenBlacklistService;
 import com.example.crud.service.UserService;
 import com.example.crud.util.JwtUtil;
 import com.example.crud.util.VerificationUtil;
@@ -30,52 +31,16 @@ public class SettingsRestController {
     private VerificationUtil verficationUtil;
     private JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private TokenBlacklistService tokenBlacklistService;
 
-    public SettingsRestController(UserService theUserService, AuthorityService authorityService, EmailService emailService, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public SettingsRestController(UserService theUserService, AuthorityService authorityService, EmailService emailService, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
         this.userService = theUserService;
         this.authorityService = authorityService;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil=jwtUtil;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
-
-//
-//    @PatchMapping("/updateInfo")
-//    public ResponseEntity<Map<String, Object>> updateUserFields(
-//            @RequestParam(required = false) String firstName,
-//            @RequestParam(required = false) String lastName,
-//            @RequestParam(required = false) String phone,
-//            @RequestParam(required = false) Date dob,
-//            @RequestHeader("Authorization") String authHeader
-//    ) {
-//        Map<String, Object> response = new HashMap<>();
-//        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-//            response.put("message", "Authorization header missing or invalid.");
-//            response.put("status", HttpStatus.UNAUTHORIZED.value());
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-//        }
-//        String token = authHeader.replace("Bearer ", "");
-//        String email = jwtUtil.extractUsername(token);
-//        User user = userService.findByEmail(email);
-//
-//        if (user == null) {
-//            response.put("message", "User not found.");
-//            response.put("status", HttpStatus.UNAUTHORIZED.value());
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-//        }
-//
-//        int userId = user.getId();
-//        userService.updateUserFields(userId, firstName, lastName, phone, dob);
-//        userService.generateUsername(firstName, lastName);
-//
-//        //regenerate token after updating user fields
-//        String newToken = jwtUtil.generateToken(user.getEmail());
-//
-//        response.put("New Token", newToken);
-//        response.put("message", "Updated Successfully");
-//        response.put("status", HttpStatus.OK.value());
-//        return ResponseEntity.ok(response);
-//    }
 
     @PutMapping("/changeEmail")
     public ResponseEntity<Map<String, Object>> changeEmail(@RequestBody ChangeEmailRequest request,
@@ -147,85 +112,30 @@ public class SettingsRestController {
         return ResponseEntity.ok(response);
     }
 
-//    @PutMapping("/changePassword")
-//    public ResponseEntity<Map<String, Object>> changePassword(@RequestBody ChangePasswordRequest request,
-//                                                              @RequestHeader("Authorization") String authHeader) throws MessagingException {
-//        Map<String, Object> response = new HashMap<>();
-//        String code = request.getToken();
-//        User user = userService.findByResetToken(code);
-//        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-//            response.put("message", "Authorization header missing or invalid.");
-//            response.put("status", HttpStatus.UNAUTHORIZED.value());
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-//        }
-//
-//        String token = authHeader.replace("Bearer ", "");
-//        String email = jwtUtil.extractUsername(token);
-//
-//        System.out.println("Extracted email: " + email); // Debug
-//        String newToken = userService.updateUserFields(user.getId(),user.getFirstName(),user.getLastName(),user.getPhone(),user.getDob());
-//        response.put("New Token", newToken);
-//        //userService.findByEmail(email);
-//        if (user == null) {
-//            response.put("message", "User not found.");
-//            response.put("status", HttpStatus.UNAUTHORIZED.value());
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-//        }
-//
-//        userService.changePassword(user, request.getOldPassword(), request.getNewPassword());
-//
-//        response.put("message", "Password changed successfully.");
-//        String subject = "Password Changed Successfully";
-//        String body = "Your password has been changed successfully on " + user.getUpdatedAt() + ".";
-//        emailService.passwordChangedEmail(user.getEmail(), user.getFirstName(), subject, body);
-//
-//        return ResponseEntity.ok(response);
-//    }
-@PutMapping("/changePassword")
-public ResponseEntity<Map<String, Object>> changePassword(@RequestBody ChangePasswordRequest request,
-                                                          @RequestHeader("Authorization") String authHeader) throws MessagingException {
-    Map<String, Object> response = new HashMap<>();
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-        response.put("message", "Authorization header missing or invalid.");
-        response.put("status", HttpStatus.UNAUTHORIZED.value());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-    }
-
-    String token = authHeader.replace("Bearer ", "");
-    String email = jwtUtil.extractUsername(token);
-
-    System.out.println("Extracted email: " + email); // Debug
-
-    User user = userService.findByEmail(email);
-    if (user == null) {
-        response.put("message", "User not found.");
-        response.put("status", HttpStatus.UNAUTHORIZED.value());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-    }
-
-    userService.changePassword(user, request.getOldPassword(), request.getNewPassword());
-
-    // Regenerate token after password change
-    String newToken = jwtUtil.generateToken(user.getEmail());
-
-    response.put("message", "Password changed successfully.");
-    String subject = "Password Changed Successfully";
-    String body = "Your password has been changed successfully on " + user.getUpdatedAt() + ".";
-    emailService.passwordChangedEmail(user.getEmail(), user.getFirstName(), subject, body);
-
-    response.put("New Token", newToken);
-    return ResponseEntity.ok(response);
-}
-
-    @DeleteMapping("/deleteAccount")
-    public ResponseEntity<Map<String, Object>> deleteAccount(@RequestBody DeleteAccountRequest request,
-                                                             @RequestHeader("Authorization") String authHeader) {
+    @PutMapping("/changePassword")
+    public ResponseEntity<Map<String, Object>> changePassword(@RequestBody ChangePasswordRequest request,
+                                                              @RequestHeader("Authorization") String authHeader) throws MessagingException {
         Map<String, Object> response = new HashMap<>();
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.put("message", "Authorization header missing or invalid.");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
+
+        if (request.getOldPassword().equals(request.getNewPassword())) {
+            response.put("message", "Old password can't be the same as the new password.");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
+        if (!request.getNewPassword().matches(passwordPattern)) {
+            response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character.");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
         String token = authHeader.replace("Bearer ", "");
         String email = jwtUtil.extractUsername(token);
         User user = userService.findByEmail(email);
@@ -235,8 +145,98 @@ public ResponseEntity<Map<String, Object>> changePassword(@RequestBody ChangePas
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
-        userService.deleteAccount(user, request.getPassword());
-        response.put("message", "Account deleted successfully.");
+
+        if (!userService.isPasswordValid(user, request.getOldPassword())) {
+            response.put("message", "Old password is incorrect.");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        userService.changePassword(user, request.getOldPassword(), request.getNewPassword());
+
+        String newToken = jwtUtil.generateToken(user.getEmail());
+
+        response.put("message", "Password changed successfully.");
+        response.put("New Token", newToken);
+
+        String subject = "Password Changed Successfully";
+        String body = "Your password has been changed successfully on " + user.getUpdatedAt() + ".";
+        emailService.passwordChangedEmail(user.getEmail(), user.getFirstName(), subject, body);
+
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/verify_delAcc")
+    public ResponseEntity<Map<String, Object>> verifyDeleteAccount(@RequestBody DeleteAccountRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        User user = userService.findByEmail(request.getEmail());
+
+        if (user == null) {
+            response.put("message", "Invalid email.");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            response.put("message", "Invalid password.");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        // Generate and store deletion token
+        String deletionToken = jwtUtil.generateDeletionToken(user.getEmail());
+        userService.saveDeletionToken(user, deletionToken);
+
+        response.put("message", "Are you sure you want to delete your account?");
+        response.put("deletionToken", deletionToken);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/confirm_delAcc")
+    public ResponseEntity<Map<String, Object>> confirmDeleteAccount(@RequestHeader("Deletion-Token") String deletionToken) throws MessagingException {
+        Map<String, Object> response = new HashMap<>();
+        String email = jwtUtil.validateDeletionToken(deletionToken);
+
+        if (email == null) {
+            response.put("message", "Invalid or expired deletion token");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        User user = userService.findByEmail(email);
+        if (user == null || !userService.isDeletionTokenValid(user, deletionToken)) {
+            response.put("message", "Invalid or expired deletion token");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        userService.deleteAccount(user);
+        emailService.accountDeletedEmail(user.getEmail(), user.getFirstName(), "Account deleted successfully", "Your account was deleted on " + user.getUpdatedAt() + ".");
+
+        response.put("message", "Account deleted successfully");
+        return ResponseEntity.ok(response);
+    }
+
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, Object>> logout(@RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+
+        //validate the Authorization header
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.put("message", "Authorization header missing or invalid.");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        //extract the token
+        String token = authHeader.replace("Bearer ", "");
+
+        //blacklist the token
+        tokenBlacklistService.blacklistToken(token);
+
+        response.put("message", "Logged out successfully.");
+        response.put("status", HttpStatus.OK.value());
+        return ResponseEntity.ok(response);
+    }
+
 }

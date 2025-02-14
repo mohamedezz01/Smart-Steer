@@ -62,6 +62,12 @@ public class User {
 
     @Column(name = "updated_at")
     private Date updatedAt;
+    @Column(name = "deletion_token")
+    private String deletionToken;
+
+    @Column(name = "deletion_token_expiry")
+    private Date deletionTokenExpiry;
+
 
 
     public User() {
@@ -205,6 +211,24 @@ public class User {
     public void setUsername(String username) {
         this.username = username;
     }
+
+    // Getters and Setters
+    public String getDeletionToken() {
+        return deletionToken;
+    }
+
+    public void setDeletionToken(String deletionToken) {
+        this.deletionToken = deletionToken;
+    }
+
+    public Date getDeletionTokenExpiry() {
+        return deletionTokenExpiry;
+    }
+
+    public void setDeletionTokenExpiry(Date deletionTokenExpiry) {
+        this.deletionTokenExpiry = deletionTokenExpiry;
+    }
+
     public enum Gender {
         MALE, FEMALE
     }

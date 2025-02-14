@@ -15,7 +15,11 @@ public interface UserService {
     User findByVerificationCode(String code);
     User findByResetToken(String resetToken);
     String updateUserFields(int userId,String firstName,String lastName,String phone, Date dob);
-    void deleteAccount(User user, String password);
-    void changePassword(User user, String oldPassword, String newPassword);
+    void deleteAccount(User user);
+     boolean changePassword(User user, String oldPassword, String newPassword);
+    public boolean isPasswordValid(User user, String password);
+    public void saveDeletionToken(User user, String deletionToken);
+
+    public boolean isDeletionTokenValid(User user, String deletionToken);
 
 }

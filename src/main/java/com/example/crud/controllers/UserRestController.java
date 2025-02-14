@@ -38,15 +38,22 @@ public class UserRestController {
 
     @PostMapping("/signup")
     public ResponseEntity<Map<String, Object>> signUp(@RequestBody User user) throws MessagingException {
-        System.out.println("Received User Data: " + user);
-        Map<String, Object> response = new HashMap<>();
-        String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
 
+        Map<String, Object> response = new HashMap<>();
+
+        if (userService.findByEmail(user.getEmail()) != null) {
+            response.put("message", "Email already exists");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
         if (!user.getPassword().matches(passwordPattern)) {
             response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character.");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
+
 
         String username = userService.generateUsername(user.getFirstName(), user.getLastName());
         user.setUsername(username);
@@ -56,7 +63,6 @@ public class UserRestController {
         user.setEmailVerified(false);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userService.save(user);
-
 
         String subject = "Email Verification";
         String body = "Please verify your email using this code: " + verificationCode;
@@ -92,8 +98,6 @@ public class UserRestController {
         response.put("token", token);
         return ResponseEntity.ok(response);
     }
-
-
 
      //Login endpoint
      @PostMapping("/login")
@@ -139,9 +143,9 @@ public class UserRestController {
         user.setTokenExpiration(new Date(System.currentTimeMillis() + 15 * 60 * 1000)); //valid for 15 minute
         userService.save(user);
 
-        String subject = "Password Reset Request";
+        String subject = "Password Reset";
         String body = "Use this code to confirm your email: " + resetToken;
-        emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), subject, body);
+        emailService.passwordForgottenEmail(user.getEmail(), user.getFirstName(), subject, body);
 
         response.put("message", "email confirmation code sent to your email.");
         response.put("status", HttpStatus.OK.value());
@@ -182,7 +186,7 @@ public class UserRestController {
         user.setTokenExpiration(null);
         user.setUpdatedAt(new Date());
         userService.save(user);
-        // Send confirmation email
+        //send confirmation email
         String subject = "Password Changed Successfully";
         String body = "Your password has been changed successfully on " + user.getUpdatedAt() + ".";
         emailService.passwordChangedEmail(user.getEmail(), user.getFirstName(), subject, body);
@@ -191,15 +195,6 @@ public class UserRestController {
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -232,60 +227,4 @@ public class UserRestController {
         userService.deleteById(Id);
         return "deleted user with id of "+Id;
     }
-
-    @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
-
-        //token handling ......
-        //
-
-        return ResponseEntity.ok("User logged out successfully");
-    }
-
-
-//    @PutMapping("/users")
-//    public User updateUser(@PathVariable int userId, @RequestBody Map<String, Object> updates) {
-//
-//        // Fetch the existing user by ID
-//        User existingUser = userService.findById(userId);
-//        if (existingUser == null) {
-//            throw new RuntimeException("User ID not found - " + userId);
-//        }
-//
-//        updates.forEach((key, value) -> {
-//            switch (key) {
-//                case "firstName":
-//                    existingUser.setFirstName((String) value);
-//                    break;
-//                case "lastName":
-//                    existingUser.setLastName((String) value);
-//                    break;
-//                case "email":
-//                    existingUser.setEmail((String) value);
-//                    break;
-//                case "password":
-//                    existingUser.setPassword((String) value);
-//                    break;
-//
-//                case "phone":
-//                    existingUser.setPhone((String) value);
-//                    break;
-//
-//                case "dob":
-//                    existingUser.setDob((Date) value);
-//            }
-//        });
-//
-//        return userService.save(existingUser);
-//    }
-
-    //update user
-//    @PutMapping("/users")
-//    public User updUser(@RequestBody User theUser){
-//
-//        User updUser=userService.save(theUser);
-//        return updUser;
-//    }
-
-
 }

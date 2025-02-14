@@ -41,11 +41,11 @@ public class EmergencyContactController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
-        // Extract the token
+        //extract the token
         String token = authHeader.replace("Bearer ", "");
 
-        // Extract email/username from the token
-        String email = jwtUtil.extractUsername(token); // Ensure your JWT util has this method
+        //extract email/username from the token
+        String email = jwtUtil.extractUsername(token);
 
         User user = userService.findByEmail(email);
 
@@ -54,8 +54,14 @@ public class EmergencyContactController {
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
+        boolean contactExists = emergencyContactService.existsByPhoneAndUser(contact.getPhone(), user);
+        if (contactExists) {
+            response.put("message", "A contact with the same phone number already exists");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
 
-        // Set user association and save contact
+        //set user association and save contact
         contact.setUser(user);
         EmergencyContact savedContact = emergencyContactService.addContact(contact);
 
@@ -134,7 +140,6 @@ public class EmergencyContactController {
         EmergencyContact savedContact = emergencyContactService.addContact(existingContact);
 
         response.put("message", "Emergency contact updated successfully.");
-        response.put("contact", savedContact);
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }

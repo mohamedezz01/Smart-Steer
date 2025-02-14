@@ -65,5 +65,46 @@ public class EmailService implements EmailServ {
 
         mailSender.send(message);
     }
+
+    @Override
+    public void passwordForgottenEmail(String to,String firstName, String subject, String resetToken) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        // email recipient, subject, and sender
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setFrom("SmartSteer@outlook.com");
+
+        // for thymeleaf template
+        Context context = new Context();
+        context.setVariable("firstName", firstName);
+        context.setVariable("resetToken", resetToken);
+        // Render email template with thymeleaf
+        String htmlContent = templateEngine.process("passForgotten_email", context);
+        helper.setText(htmlContent, true); // 'true' enables HTML content
+
+        mailSender.send(message);
+    }
+
+    @Override
+    public void accountDeletedEmail(String to, String firstName, String subject, String body) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        // email recipient, subject, and sender
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setFrom("SmartSteer@outlook.com");
+
+        // for thymeleaf template
+        Context context = new Context();
+        context.setVariable("firstName", firstName);
+        // Render email template with thymeleaf
+        String htmlContent = templateEngine.process("deleted_email", context);
+        helper.setText(htmlContent, true); // 'true' enables HTML content
+
+        mailSender.send(message);
+    }
 }
 
