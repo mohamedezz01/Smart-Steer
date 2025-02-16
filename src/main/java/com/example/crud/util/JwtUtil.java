@@ -21,13 +21,13 @@ public class JwtUtil {
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
-    private final long DELETE_TOKEN_EXPIRATION = TimeUnit.MINUTES.toMillis(10); // 10 min expiry
+    private final long DELETE_TOKEN_EXPIRATION = TimeUnit.MINUTES.toMillis(5); // 5 min expiry
     private final SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)) // 7 days
+                .setExpiration(new Date(System.currentTimeMillis() + 20 * 24 * 60 * 60 * 1000)) // 20 days
                 .signWith(getSigningKey())
                 .compact();
     }
@@ -59,7 +59,6 @@ public class JwtUtil {
                 .getBody();
     }
 
-
     public String generateDeletionToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
@@ -76,9 +75,9 @@ public class JwtUtil {
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            return claims.getSubject(); // Returns the email if valid
+            return claims.getSubject(); //returns the email if valid
         } catch (JwtException | IllegalArgumentException e) {
-            return null; // Invalid or expired token
+            return null; //invalid or expired token
         }
     }
 

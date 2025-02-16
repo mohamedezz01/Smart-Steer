@@ -154,6 +154,7 @@ public class SettingsRestController {
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
+
     @PostMapping("/confirmNewEmail")
     public ResponseEntity<Map<String, Object>> confirmNewEmail(@RequestBody Map<String, String> requestBody,
                                                                @RequestHeader("Authorization") String authHeader) {
@@ -166,8 +167,8 @@ public class SettingsRestController {
         }
 
         String token = authHeader.replace("Bearer ", "");
-        String email = jwtUtil.extractUsername(token);  // Extract email from token
-        User user = userService.findByEmail(email);  // Find user by extracted email
+        String email = jwtUtil.extractUsername(token);  //extract email from token
+        User user = userService.findByEmail(email);  //find user by extracted email
 
         if (user == null) {
             response.put("message", "User not found.");
@@ -187,6 +188,9 @@ public class SettingsRestController {
         user.setVerificationCode(null);
         userService.save(user);
 
+        String newToken = jwtUtil.generateToken(user.getEmail());
+
+        response.put("New Token", newToken);
         response.put("message", "New email verified and updated successfully.");
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
@@ -289,7 +293,7 @@ public class SettingsRestController {
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-        // Generate and store deletion token
+
         String deletionToken = jwtUtil.generateDeletionToken(user.getEmail());
         userService.saveDeletionToken(user, deletionToken);
 
