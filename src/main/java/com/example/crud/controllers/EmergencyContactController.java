@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +72,6 @@ public class EmergencyContactController {
         return ResponseEntity.ok(response);
     }
 
-
     //get all emergency contacts for logged-in user
     @GetMapping("/list")
     public ResponseEntity<Map<String, Object>> listEmergencyContacts(@RequestHeader("Authorization") String authHeader) {
@@ -96,6 +96,14 @@ public class EmergencyContactController {
         }
 
         List<EmergencyContact> contacts = emergencyContactService.getContactsByUserId(user.getId());
+
+        if (contacts.isEmpty()) {
+            response.put("message", "No emergency contacts found.");
+            response.put("contacts", Collections.emptyList());
+            response.put("status", HttpStatus.OK.value());
+            return ResponseEntity.ok(response);
+        }
+
         response.put("message", "Emergency contacts retrieved successfully.");
         response.put("contacts", contacts);
         response.put("status", HttpStatus.OK.value());
@@ -126,7 +134,7 @@ public class EmergencyContactController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
-        // Find and validate the existing contact
+        //find and validate the existing contact
         EmergencyContact existingContact = emergencyContactService.findById(contactId);
         if (existingContact == null || existingContact.getUser().getId() != user.getId()) {
             response.put("message", "Emergency contact not found or access denied.");

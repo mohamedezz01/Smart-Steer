@@ -3,6 +3,7 @@ package com.example.crud.controllers;
 import com.example.crud.dto.ChangeEmailRequest;
 import com.example.crud.dto.ChangePasswordRequest;
 import com.example.crud.dto.DeleteAccountRequest;
+import com.example.crud.entity.EmergencyContact;
 import com.example.crud.entity.User;
 import com.example.crud.service.AuthorityService;
 import com.example.crud.service.EmailService;
@@ -16,9 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 @RestController
@@ -42,9 +41,9 @@ public class SettingsRestController {
         this.tokenBlacklistService = tokenBlacklistService;
     }
 
-    @PutMapping("/changeEmail")
-    public ResponseEntity<Map<String, Object>> changeEmail(@RequestBody ChangeEmailRequest request,
-                                                           @RequestHeader("Authorization") String authHeader) {
+
+    @PostMapping("/verifyCurrentEmail")
+    public ResponseEntity<Map<String, Object>> verifyCurrentEmail(@RequestHeader("Authorization") String authHeader) throws MessagingException {
         Map<String, Object> response = new HashMap<>();
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -54,60 +53,168 @@ public class SettingsRestController {
         }
 
         String token = authHeader.replace("Bearer ", "");
-        String email = jwtUtil.extractUsername(token); // Extract email from JWT
+        String email = jwtUtil.extractUsername(token);
         User user = userService.findByEmail(email);
 
-        if (user ==null) {
+        if (user == null) {
             response.put("message", "User not found.");
             response.put("status", HttpStatus.NOT_FOUND.value());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
-        String newEmail = request.getNewEmail();
+        String verificationCode = VerificationUtil.generateVerificationCode();
+        user.setVerificationCode(verificationCode);
+        userService.save(user);
 
+        String subject = "Confirm Your Current Email";
+        String body = "Your verification code: " + verificationCode;
+        emailService.sendVerificationEmail(email, user.getFirstName(), subject, body);
+
+        response.put("message", "Verification code sent to current email.");
+        response.put("status", HttpStatus.OK.value());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/confirmCurrentEmail")
+    public ResponseEntity<Map<String, Object>> confirmCurrentEmail(@RequestBody Map<String, String> requestBody,
+                                                                   @RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+        String verificationCode = requestBody.get("verificationCode");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.put("message", "Authorization header missing or invalid.");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        if (verificationCode == null || verificationCode.isEmpty()) {
+            response.put("message", "Verification code is required.");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtil.extractUsername(token);
+        User user = userService.findByEmail(email);
+
+        if (user == null || !verificationCode.equals(user.getVerificationCode())) {
+            response.put("message", "Invalid verification code.");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        user.setVerificationCode(null);
+        userService.save(user);
+
+        response.put("message", "Current email verified successfully");
+        response.put("status", HttpStatus.OK.value());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/sendNewEmailVerification")
+    public ResponseEntity<Map<String, Object>> sendNewEmailVerification(@RequestBody Map<String, String> requestBody,
+                                                                        @RequestHeader("Authorization") String authHeader) throws MessagingException {
+        Map<String, Object> response = new HashMap<>();
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.put("message", "Authorization header missing or invalid.");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtil.extractUsername(token);
+        User user = userService.findByEmail(email);
+
+        if (user == null) {
+            response.put("message", "User not found.");
+            response.put("status", HttpStatus.NOT_FOUND.value());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+        String newEmail = requestBody.get("newEmail");
         if (newEmail == null || newEmail.isEmpty() || newEmail.equals(email)) {
             response.put("message", "Invalid or duplicate email provided.");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+
         String verificationCode = VerificationUtil.generateVerificationCode();
         user.setVerificationCode(verificationCode);
         user.setEmailVerified(false);
         user.setEmail(newEmail);
-
         userService.save(user);
 
-        String fName= user.getFirstName();
-        String subject = "Change Email Request";
-        try {
-            emailService.sendVerificationEmail(newEmail,fName,subject, verificationCode);
-        } catch (Exception e) {
-            response.put("message", "Failed to send verification email.");
-            response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-        response.put("message", "Verification email sent to new email address.");
+        String newToken = jwtUtil.generateToken(user.getEmail());
+        response.put("New Token", newToken);
+
+        String subject = "Confirm Your New Email";
+        String body = "Your verification code: " + verificationCode;
+        emailService.sendVerificationEmail(newEmail, user.getFirstName(), subject, body);
+
+        response.put("message", "Verification code sent to new email.");
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
-
-    @PostMapping("/verifyChangedEmail")
-    public ResponseEntity<Map<String, Object>> verifyEmail(@RequestParam String verificationCode) {
+    @PostMapping("/confirmNewEmail")
+    public ResponseEntity<Map<String, Object>> confirmNewEmail(@RequestBody Map<String, String> requestBody,
+                                                               @RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
-        User user = userService.findByVerificationCode(verificationCode);
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.put("message", "Authorization header missing or invalid.");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtil.extractUsername(token);  // Extract email from token
+        User user = userService.findByEmail(email);  // Find user by extracted email
 
         if (user == null) {
+            response.put("message", "User not found.");
+            response.put("status", HttpStatus.NOT_FOUND.value());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        String verificationCode = requestBody.get("verificationCode");
+
+        if (verificationCode == null || verificationCode.isEmpty() || !verificationCode.equals(user.getVerificationCode())) {
             response.put("message", "Invalid verification code.");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+
         user.setEmailVerified(true);
         user.setVerificationCode(null);
-        String newToken = userService.updateUserFields(user.getId(),user.getFirstName(),user.getLastName(),user.getPhone(),user.getDob());
-        response.put("New Token", newToken);
         userService.save(user);
 
-        response.put("message", "Email verified successfully.");
+        response.put("message", "New email verified and updated successfully.");
+        response.put("status", HttpStatus.OK.value());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/email")
+    public ResponseEntity<Map<String, Object>> email(@RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+
+        // Validate the Authorization header
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.put("message", "Authorization header missing or invalid.");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        // Extract the token and username
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtil.extractUsername(token);
+
+        User user = userService.findByEmail(email);
+        if (user == null) {
+            response.put("message", "User not found.");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        response.put("message", email);
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
@@ -173,14 +280,14 @@ public class SettingsRestController {
 
         if (user == null) {
             response.put("message", "Invalid email.");
-            response.put("status", HttpStatus.UNAUTHORIZED.value());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             response.put("message", "Invalid password.");
-            response.put("status", HttpStatus.UNAUTHORIZED.value());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
         // Generate and store deletion token
         String deletionToken = jwtUtil.generateDeletionToken(user.getEmail());
@@ -194,15 +301,9 @@ public class SettingsRestController {
     @DeleteMapping("/confirm_delAcc")
     public ResponseEntity<Map<String, Object>> confirmDeleteAccount(@RequestHeader("Deletion-Token") String deletionToken) throws MessagingException {
         Map<String, Object> response = new HashMap<>();
-        String email = jwtUtil.validateDeletionToken(deletionToken);
+        String delToken = jwtUtil.validateDeletionToken(deletionToken);
 
-        if (email == null) {
-            response.put("message", "Invalid or expired deletion token");
-            response.put("status", HttpStatus.UNAUTHORIZED.value());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        }
-
-        User user = userService.findByEmail(email);
+        User user = userService.findByEmail(delToken);
         if (user == null || !userService.isDeletionTokenValid(user, deletionToken)) {
             response.put("message", "Invalid or expired deletion token");
             response.put("status", HttpStatus.UNAUTHORIZED.value());

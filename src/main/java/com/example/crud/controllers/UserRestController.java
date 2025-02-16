@@ -38,22 +38,38 @@ public class UserRestController {
 
     @PostMapping("/signup")
     public ResponseEntity<Map<String, Object>> signUp(@RequestBody User user) throws MessagingException {
-
         Map<String, Object> response = new HashMap<>();
 
-        if (userService.findByEmail(user.getEmail()) != null) {
+        User existingUser = userService.findByEmail(user.getEmail());
+
+        //if email exists but not verified, resend verification code
+        if (existingUser != null) {
+            if (!existingUser.isEmailVerified()) {
+                String newVerificationCode = VerificationUtil.generateVerificationCode();
+                existingUser.setVerificationCode(newVerificationCode);
+                userService.save(existingUser);
+
+                String subject = "Resend Email Verification";
+                String body = "Please verify your email using this new code: " + newVerificationCode;
+                emailService.sendVerificationEmail(existingUser.getEmail(), existingUser.getFirstName(), subject, body);
+
+                response.put("message", "A new verification code has been sent. Please verify your email.");
+                return ResponseEntity.ok(response);
+            }
+
+            //email already exists and verified
             response.put("message", "Email already exists");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
 
+        //new user signup Process
         String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
         if (!user.getPassword().matches(passwordPattern)) {
             response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character.");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
-
 
         String username = userService.generateUsername(user.getFirstName(), user.getLastName());
         user.setUsername(username);
@@ -71,7 +87,6 @@ public class UserRestController {
         response.put("message", "Sign-up successful! Please verify your email.");
         return ResponseEntity.ok(response);
     }
-
 
     @PostMapping("/verifyEmail")
     public ResponseEntity<Map<String, Object>> verifyEmail(@RequestParam String code) {
@@ -101,21 +116,29 @@ public class UserRestController {
 
      //Login endpoint
      @PostMapping("/login")
-     public ResponseEntity<Map<String, Object>> loginUser(@RequestBody User loginRequest) {
+     public ResponseEntity<Map<String, Object>> loginUser(@RequestBody User loginRequest) throws MessagingException {
          Map<String, Object> response = new HashMap<>();
 
          User user = userService.findByEmail(loginRequest.getEmail());
 
          if (user == null) {
              response.put("message", "Email not found.");
-             response.put("status", HttpStatus.UNAUTHORIZED.value());
-             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+             response.put("status", HttpStatus.BAD_REQUEST.value());
+             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
          }
 
          if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
              response.put("message", "Invalid password.");
-             response.put("status", HttpStatus.UNAUTHORIZED.value());
-             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+             response.put("status", HttpStatus.BAD_REQUEST.value());
+             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+         }
+
+         if (!user.isEmailVerified()) {
+             response.put("message", "Email is not verified. Please verify your email");
+             response.put("status", HttpStatus.FORBIDDEN.value());
+             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+
+
          }
 
          String token = jwtUtil.generateToken(user.getEmail());
@@ -160,8 +183,8 @@ public class UserRestController {
         User user = userService.findByResetToken(code);
         if (user == null || user.getResetToken() == null || user.getTokenExpiration().before(new Date())) {
             response.put("message", "Invalid or expired code.");
-            response.put("status", HttpStatus.UNAUTHORIZED.value());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
         response.put("message", "Code is valid.");
@@ -177,10 +200,16 @@ public class UserRestController {
 
         if (user == null || user.getResetToken() == null || user.getTokenExpiration().before(new Date())) {
             response.put("message", "Invalid or expired code.");
-            response.put("status", HttpStatus.UNAUTHORIZED.value());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
+        String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
+        if (!user.getPassword().matches(passwordPattern)) {
+            response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character.");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.badRequest().body(response);
+        }
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         user.setResetToken(null);
         user.setTokenExpiration(null);
