@@ -113,14 +113,13 @@ public class UserRestController {
         response.put("token", token);
         return ResponseEntity.ok(response);
     }
-
      //Login endpoint
      @PostMapping("/login")
      public ResponseEntity<Map<String, Object>> loginUser(@RequestBody User loginRequest) throws MessagingException {
          Map<String, Object> response = new HashMap<>();
 
          User user = userService.findByEmail(loginRequest.getEmail());
-
+         String verificationCode = VerificationUtil.generateVerificationCode();
          if (user == null) {
              response.put("message", "Email not found.");
              response.put("status", HttpStatus.BAD_REQUEST.value());
@@ -136,9 +135,10 @@ public class UserRestController {
          if (!user.isEmailVerified()) {
              response.put("message", "Email is not verified. Please verify your email");
              response.put("status", HttpStatus.FORBIDDEN.value());
+             String subject = "Email Verification";
+             String body = "Please verify your email using this code: " + verificationCode;
+             emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), subject, body);
              return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-
-
          }
 
          String token = jwtUtil.generateToken(user.getEmail());
