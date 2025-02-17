@@ -91,8 +91,8 @@ public class EmergencyContactController {
         User user = userService.findByEmail(email);
         if (user == null) {
             response.put("message", "User not found.");
-            response.put("status", HttpStatus.UNAUTHORIZED.value());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
 
         List<EmergencyContact> contacts = emergencyContactService.getContactsByUserId(user.getId());
@@ -103,7 +103,7 @@ public class EmergencyContactController {
             response.put("status", HttpStatus.OK.value());
             return ResponseEntity.ok(response);
         }
-
+        System.out.println("User Retrieved: " + user);
         response.put("message", "Emergency contacts retrieved successfully.");
         response.put("contacts", contacts);
         response.put("status", HttpStatus.OK.value());

@@ -119,7 +119,7 @@ public class UserRestController {
          Map<String, Object> response = new HashMap<>();
 
          User user = userService.findByEmail(loginRequest.getEmail());
-         String verificationCode = VerificationUtil.generateVerificationCode();
+
          if (user == null) {
              response.put("message", "Email not found.");
              response.put("status", HttpStatus.BAD_REQUEST.value());
@@ -135,6 +135,8 @@ public class UserRestController {
          if (!user.isEmailVerified()) {
              response.put("message", "Email is not verified. Please verify your email");
              response.put("status", HttpStatus.FORBIDDEN.value());
+             String verificationCode = VerificationUtil.generateVerificationCode();
+             user.setVerificationCode(verificationCode);
              String subject = "Email Verification";
              String body = "Please verify your email using this code: " + verificationCode;
              emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), subject, body);
@@ -225,7 +227,67 @@ public class UserRestController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/resendVerification")
+    public ResponseEntity<Map<String, Object>> resendVerification(@RequestBody Map<String, String> requestBody,
+                                                                  @RequestHeader(value = "Authorization", required = false) String authHeader) throws MessagingException {
+        Map<String, Object> response = new HashMap<>();
+        String email = requestBody.get("email");
 
+        if (email == null || email.isEmpty()) {
+            response.put("message", "Email is required.");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        User user;
+
+        // Check if request is authenticated (for email change)
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.replace("Bearer ", "");
+            String loggedInEmail = jwtUtil.extractUsername(token);
+            user = userService.findByEmail(loggedInEmail);
+
+            if (user == null) {
+                response.put("message", "User not found.");
+                response.put("status", HttpStatus.NOT_FOUND.value());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+            if (!user.getEmail().equals(email)) {
+                response.put("message", "You can only request verification for your pending email.");
+                response.put("status", HttpStatus.FORBIDDEN.value());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+        } else {
+            // if there is no token then checking if email exists in sign up process
+            user = userService.findByEmail(email);
+            if (user == null) {
+                response.put("message", "Email not registered.");
+                response.put("status", HttpStatus.NOT_FOUND.value());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+        }
+
+        // Check if email is already verified
+        if (user.isEmailVerified()) {
+            response.put("message", "Email is already verified.");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        // Generate and send a new verification code
+        String newVerificationCode = VerificationUtil.generateVerificationCode();
+        user.setVerificationCode(newVerificationCode);
+        userService.save(user);
+
+        String subject = "Resend Email Verification";
+        String body = "Please verify your email using this new code: " + newVerificationCode;
+        emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), subject, body);
+
+        response.put("message", "A new verification code has been sent to your email");
+        return ResponseEntity.ok(response);
+
+}
 
     ////////////////////////////////////////////////////////////////////////////////////////
     //get all users
