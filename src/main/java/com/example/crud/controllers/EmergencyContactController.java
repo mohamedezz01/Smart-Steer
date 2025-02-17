@@ -86,7 +86,7 @@ public class EmergencyContactController {
 
         // Extract the token and username
         String token = authHeader.replace("Bearer ", "");
-        String email = jwtUtil.extractUsername(token);
+        String email = jwtUtil.extractEmail(token);
 
         User user = userService.findByEmail(email);
         if (user == null) {
