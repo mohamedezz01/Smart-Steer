@@ -107,7 +107,7 @@ public class UserRestController {
         auth.setAuthority("ROLE_USER");
         authorityService.save(auth);
 
-        String token = jwtUtil.generateToken(user.getUsername());
+        String token = jwtUtil.generateToken(user.getUsername(), user.getEmail());
 
         response.put("message", "Email verified successfully!");
         response.put("token", token);
@@ -143,7 +143,7 @@ public class UserRestController {
              return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
          }
 
-         String token = jwtUtil.generateToken(user.getEmail());
+         String token = jwtUtil.generateToken(user.getUsername(), user.getEmail());
 
          response.put("message", "Login successful.");
          response.put("token", token);
@@ -206,12 +206,15 @@ public class UserRestController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
+        String passwordPattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
+
         if (!user.getPassword().matches(passwordPattern)) {
-            response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character.");
+            response.put("message", "Password must be at least 10 characters long and include at least one lowercase letter, one uppercase letter, one number, and one special character.");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
+
+
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         user.setResetToken(null);
         user.setTokenExpiration(null);

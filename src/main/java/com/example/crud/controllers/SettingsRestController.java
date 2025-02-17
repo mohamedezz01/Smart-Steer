@@ -143,7 +143,7 @@ public class SettingsRestController {
         user.setEmail(newEmail);
         userService.save(user);
 
-        String newToken = jwtUtil.generateToken(user.getEmail());
+        String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail());
         response.put("New Token", newToken);
 
         String subject = "Confirm Your New Email";
@@ -188,7 +188,7 @@ public class SettingsRestController {
         user.setVerificationCode(null);
         userService.save(user);
 
-        String newToken = jwtUtil.generateToken(user.getEmail());
+        String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail());
 
         response.put("New Token", newToken);
         response.put("message", "New email verified and updated successfully.");
@@ -265,7 +265,7 @@ public class SettingsRestController {
 
         userService.changePassword(user, request.getOldPassword(), request.getNewPassword());
 
-        String newToken = jwtUtil.generateToken(user.getEmail());
+        String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail());
 
         response.put("message", "Password changed successfully.");
         response.put("New Token", newToken);
