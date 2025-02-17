@@ -126,7 +126,7 @@ public class UserServiceImpl implements UserService {
         if (dob != null) user.setDob(dob);
         save(user);
 
-        return jwtUtil.generateToken(user.getEmail());
+        return jwtUtil.generateToken(user.getEmail(),user.getUsername());
     }
 
 
