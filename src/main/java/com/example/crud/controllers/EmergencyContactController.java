@@ -46,7 +46,7 @@ public class EmergencyContactController {
         String token = authHeader.replace("Bearer ", "");
 
         //extract email/username from the token
-        String email = jwtUtil.extractUsername(token);
+        String email = jwtUtil.extractEmail(token);
 
         User user = userService.findByEmail(email);
 
@@ -94,7 +94,7 @@ public class EmergencyContactController {
             response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-
+        System.out.println("User Retrieved: " + user);
         List<EmergencyContact> contacts = emergencyContactService.getContactsByUserId(user.getId());
 
         if (contacts.isEmpty()) {
@@ -103,7 +103,7 @@ public class EmergencyContactController {
             response.put("status", HttpStatus.OK.value());
             return ResponseEntity.ok(response);
         }
-        System.out.println("User Retrieved: " + user);
+
         response.put("message", "Emergency contacts retrieved successfully.");
         response.put("contacts", contacts);
         response.put("status", HttpStatus.OK.value());
@@ -125,7 +125,7 @@ public class EmergencyContactController {
 
         // Extract the token and username
         String token = authHeader.replace("Bearer ", "");
-        String email = jwtUtil.extractUsername(token);
+        String email = jwtUtil.extractEmail(token);
 
         User user = userService.findByEmail(email);
         if (user == null) {
@@ -167,7 +167,7 @@ public class EmergencyContactController {
 
         // Extract the token and username
         String token = authHeader.replace("Bearer ", "");
-        String email = jwtUtil.extractUsername(token);
+        String email = jwtUtil.extractEmail(token);
 
         User user = userService.findByEmail(email);
         if (user == null) {

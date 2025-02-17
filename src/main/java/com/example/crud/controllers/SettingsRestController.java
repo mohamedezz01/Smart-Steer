@@ -53,7 +53,7 @@ public class SettingsRestController {
         }
 
         String token = authHeader.replace("Bearer ", "");
-        String email = jwtUtil.extractUsername(token);
+        String email = jwtUtil.extractEmail(token);
         User user = userService.findByEmail(email);
 
         if (user == null) {
@@ -93,7 +93,7 @@ public class SettingsRestController {
         }
 
         String token = authHeader.replace("Bearer ", "");
-        String email = jwtUtil.extractUsername(token);
+        String email = jwtUtil.extractEmail(token);
         User user = userService.findByEmail(email);
 
         if (user == null || !verificationCode.equals(user.getVerificationCode())) {
@@ -122,7 +122,7 @@ public class SettingsRestController {
         }
 
         String token = authHeader.replace("Bearer ", "");
-        String email = jwtUtil.extractUsername(token);
+        String email = jwtUtil.extractEmail(token);
         User user = userService.findByEmail(email);
 
         if (user == null) {
@@ -167,7 +167,7 @@ public class SettingsRestController {
         }
 
         String token = authHeader.replace("Bearer ", "");
-        String email = jwtUtil.extractUsername(token);  //extract email from token
+        String email = jwtUtil.extractEmail(token);  //extract email from token
         User user = userService.findByEmail(email);  //find user by extracted email
 
         if (user == null) {
@@ -209,7 +209,7 @@ public class SettingsRestController {
 
         // Extract the token and username
         String token = authHeader.replace("Bearer ", "");
-        String email = jwtUtil.extractUsername(token);
+        String email = jwtUtil.extractEmail(token);
 
         User user = userService.findByEmail(email);
         if (user == null) {
@@ -240,7 +240,7 @@ public class SettingsRestController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
+        String passwordPattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
         if (!request.getNewPassword().matches(passwordPattern)) {
             response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character.");
             response.put("status", HttpStatus.BAD_REQUEST.value());
@@ -248,7 +248,7 @@ public class SettingsRestController {
         }
 
         String token = authHeader.replace("Bearer ", "");
-        String email = jwtUtil.extractUsername(token);
+        String email = jwtUtil.extractEmail(token);
         User user = userService.findByEmail(email);
 
         if (user == null) {

@@ -207,13 +207,13 @@ public class UserRestController {
         }
 
         String passwordPattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
-
-        if (!user.getPassword().matches(passwordPattern)) {
+        System.out.println("New Password: " + request.getNewPassword());
+        System.out.println("Pattern Matches: " + request.getNewPassword().matches(passwordPattern));
+        if (!request.getNewPassword().matches(passwordPattern)) {
             response.put("message", "Password must be at least 10 characters long and include at least one lowercase letter, one uppercase letter, one number, and one special character.");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
-
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         user.setResetToken(null);
@@ -247,7 +247,7 @@ public class UserRestController {
         // Check if request is authenticated (for email change)
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.replace("Bearer ", "");
-            String loggedInEmail = jwtUtil.extractUsername(token);
+            String loggedInEmail = jwtUtil.extractEmail(token);
             user = userService.findByEmail(loggedInEmail);
 
             if (user == null) {
