@@ -116,7 +116,7 @@ public class EmergencyContactController {
             @PathVariable int contactId, @RequestBody EmergencyContact updatedContact, @RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
 
-        // Validate the Authorization header
+        //validate the Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.put("message", "Authorization header missing or invalid.");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
