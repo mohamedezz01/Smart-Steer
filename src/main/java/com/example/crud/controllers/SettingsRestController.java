@@ -105,7 +105,7 @@ public class SettingsRestController {
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-
+        user.setEmailVerified(true);
         user.setVerificationCode(null);
         userService.save(user);
 
