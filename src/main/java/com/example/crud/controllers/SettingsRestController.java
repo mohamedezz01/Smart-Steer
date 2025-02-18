@@ -13,10 +13,13 @@ import com.example.crud.util.JwtUtil;
 import com.example.crud.util.VerificationUtil;
 import jakarta.mail.MessagingException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.*;
 
 
@@ -343,5 +346,58 @@ public class SettingsRestController {
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
+
+    //profile picture upload
+    @PostMapping("/uploadProfilePicture")
+    public ResponseEntity<Map<String, Object>> uploadProfilePicture(@RequestParam("image") MultipartFile file,
+                                                                    @RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.put("message", "Authorization header missing or invalid.");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        //2MB max
+        if (file.getSize() > 2 * 1024 * 1024) {
+            response.put("message", "Image size must be less than 2MB.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtil.extractEmail(token);
+        User user = userService.findByEmail(email);
+
+        if (user == null) {
+            response.put("message", "User not found.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+        try {
+            user.setProfilePicture(file.getBytes());
+            userService.save(user);
+            response.put("message", "Profile picture uploaded successfully.");
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            response.put("message", "Failed to process image.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @GetMapping("/profilePicture")
+    public ResponseEntity<byte[]> getProfilePicture(@RequestHeader("Authorization") String authHeader) {
+
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtil.extractEmail(token);
+        User user = userService.findByEmail(email);
+
+        if (user == null || user.getProfilePicture() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(user.getProfilePicture());
+    }
+
 
 }

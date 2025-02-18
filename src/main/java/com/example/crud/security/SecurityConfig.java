@@ -22,8 +22,8 @@ public class SecurityConfig {
                         // Public endpoints
                         .requestMatchers(HttpMethod.POST, "/GP/signup", "/GP/login", "/GP/verifyEmail","/GP/settings/verify_delAcc",
                                 "/GP/forgot_password", "/GP/reset_password","/GP/emergency/add","/GP/confirm_reset_code","/GP/settings/logout",
-                                "/GP/settings/confirmCurrentEmail","/GP/settings/verifyCurrentEmail","/GP/settings/sendNewEmailVerification","/GP/settings/confirmNewEmail","/GP/resendVerification").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/GP/users", "/GP/users/**","/GP/emergency/list","/GP/settings/email").permitAll()
+                                "/GP/settings/confirmCurrentEmail","/GP/settings/verifyCurrentEmail","/GP/settings/sendNewEmailVerification","/GP/settings/confirmNewEmail","/GP/resendVerification","/GP/settings/uploadProfilePicture").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/GP/users", "/GP/users/**","/GP/emergency/list","/GP/settings/email","/GP/settings/profilePicture").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/GP/users","/GP/emergency/update/{contactId}","/GP/settings/changeEmail","/GP/settings/changePassword").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/GP/users/**","/GP/emergency/delete/{contactId}","/GP/settings/confirm_delAcc").permitAll()
                         .requestMatchers(HttpMethod.PATCH,"/GP/settings/updateInfo").permitAll()

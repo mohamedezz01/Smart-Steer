@@ -69,6 +69,10 @@ public class User {
     private Date deletionTokenExpiry;
 
 
+    @Lob
+    @Column(columnDefinition = "LONGBLOB") // Adjust based on DB
+    private byte[] profilePicture;
+
 
     public User() {
     }
@@ -90,145 +94,150 @@ public class User {
     }
 
     public Date getUpdatedAt() {
-        return updatedAt;
+    return updatedAt;
     }
 
     public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
+    this.updatedAt = updatedAt;
     }
 
     public Date getTokenExpiration() {
-        return tokenExpiration;
+    return tokenExpiration;
     }
 
     public void setTokenExpiration(Date tokenExpiration) {
-        this.tokenExpiration = tokenExpiration;
+    this.tokenExpiration = tokenExpiration;
     }
 
     public String getResetToken() {
-        return resetToken;
+    return resetToken;
     }
 
     public void setResetToken(String resetToken) {
-        this.resetToken = resetToken;
+    this.resetToken = resetToken;
     }
 
     public Date getResetTokenExpiry() {
-        return resetTokenExpiry;
+    return resetTokenExpiry;
     }
 
     public void setResetTokenExpiry(Date resetTokenExpiry) {
-        this.resetTokenExpiry = resetTokenExpiry;
+    this.resetTokenExpiry = resetTokenExpiry;
     }
 
     public Gender getGender() {
-        return gender;
+    return gender;
     }
 
     public void setGender(Gender gender) {
-        this.gender = gender;
+    this.gender = gender;
     }
 
     public String getVerificationCode() {
-        return verificationCode;
+    return verificationCode;
     }
 
     public void setVerificationCode(String verificationCode) {
-        this.verificationCode = verificationCode;
+    this.verificationCode = verificationCode;
     }
 
 
     public boolean isEmailVerified() {
-        return isEmailVerified;
+    return isEmailVerified;
     }
 
     public void setEmailVerified(boolean emailVerified) {
-        isEmailVerified = emailVerified;
+    isEmailVerified = emailVerified;
     }
 
     public String getPhone() {
-        return phone;
+    return phone;
     }
 
 
     public void setPhone(String phone) {
-        this.phone = phone;
+    this.phone = phone;
     }
 
     public Date getDob() {
-        return dob;
+    return dob;
     }
 
 
     public void setDob(Date dob) {
-        this.dob = dob;
+    this.dob = dob;
     }
 
     public int getId() {
-        return id;
+    return id;
     }
 
     public void setId(int id) {
-        this.id = id;
+    this.id = id;
     }
 
     public String getFirstName() {
-        return firstName;
+    return firstName;
     }
 
     public void setFirstName(String firstName) {
-        this.firstName = firstName;
+    this.firstName = firstName;
     }
 
     public String getLastName() {
-        return lastName;
+    return lastName;
     }
 
     public void setLastName(String lastName) {
-        this.lastName = lastName;
+    this.lastName = lastName;
     }
 
     public String getEmail() {
-        return email;
+    return email;
     }
 
     public void setEmail(String email) {
-        this.email = email;
+    this.email = email;
     }
 
     public String getPassword() {
-        return password;
+    return password;
     }
 
     public void setPassword(String password) {
-        this.password = password;
+    this.password = password;
     }
 
     public String getUsername() {
-        return username;
+    return username;
     }
+
 
     public void setUsername(String username) {
-        this.username = username;
+    this.username = username;
     }
-
-    // Getters and Setters
     public String getDeletionToken() {
-        return deletionToken;
+    return deletionToken;
     }
 
     public void setDeletionToken(String deletionToken) {
-        this.deletionToken = deletionToken;
+    this.deletionToken = deletionToken;
     }
 
     public Date getDeletionTokenExpiry() {
-        return deletionTokenExpiry;
+    return deletionTokenExpiry;
     }
 
     public void setDeletionTokenExpiry(Date deletionTokenExpiry) {
         this.deletionTokenExpiry = deletionTokenExpiry;
     }
+    public byte[] getProfilePicture() {
+        return profilePicture;
+    }
 
+    public void setProfilePicture(byte[] profilePicture) {
+        this.profilePicture = profilePicture;
+    }
     public enum Gender {
         MALE, FEMALE
     }
