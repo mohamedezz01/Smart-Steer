@@ -247,7 +247,16 @@ public class UserRestController {
         // Check if request is authenticated (for email change)
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.replace("Bearer ", "");
-            String loggedInEmail = jwtUtil.extractEmail(token);
+            String loggedInEmail;
+            try {
+                loggedInEmail = jwtUtil.extractEmail(token);
+            } catch (Exception e) {
+                response.put("message", "Invalid or expired token.");
+                response.put("status", HttpStatus.UNAUTHORIZED.value());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+            System.out.println("Extracted Email from Token: " + loggedInEmail);
+
             user = userService.findByEmail(loggedInEmail);
 
             if (user == null) {
@@ -278,7 +287,6 @@ public class UserRestController {
             return ResponseEntity.badRequest().body(response);
         }
 
-        // Generate and send a new verification code
         String newVerificationCode = VerificationUtil.generateVerificationCode();
         user.setVerificationCode(newVerificationCode);
         userService.save(user);
@@ -286,6 +294,10 @@ public class UserRestController {
         String subject = "Resend Email Verification";
         String body = "Please verify your email using this new code: " + newVerificationCode;
         emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), subject, body);
+
+         //generate a new JWT token for the user
+        String token = jwtUtil.generateToken(user.getEmail(),user.getUsername());
+        response.put("token", token);
 
         response.put("message", "A new verification code has been sent to your email");
         return ResponseEntity.ok(response);
