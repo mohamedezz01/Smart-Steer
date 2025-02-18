@@ -67,6 +67,7 @@ public class SettingsRestController {
 
         String verificationCode = VerificationUtil.generateVerificationCode();
         user.setVerificationCode(verificationCode);
+        user.setEmailVerified(false);
         userService.save(user);
 
         String subject = "Confirm Your Current Email";
