@@ -12,6 +12,8 @@ import com.example.crud.service.UserService;
 import com.example.crud.util.JwtUtil;
 import com.example.crud.util.VerificationUtil;
 import jakarta.mail.MessagingException;
+import org.springframework.context.MessageSource;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,23 +36,27 @@ public class SettingsRestController {
     private JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private TokenBlacklistService tokenBlacklistService;
+    private MessageSource messageSource;
 
-    public SettingsRestController(UserService theUserService, AuthorityService authorityService, EmailService emailService, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
+    public SettingsRestController(UserService theUserService, AuthorityService authorityService, EmailService emailService, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService,MessageSource messageSource) {
         this.userService = theUserService;
         this.authorityService = authorityService;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil=jwtUtil;
         this.tokenBlacklistService = tokenBlacklistService;
+        this.messageSource=messageSource;
     }
 
 
     @PostMapping("/verifyCurrentEmail")
-    public ResponseEntity<Map<String, Object>> verifyCurrentEmail(@RequestHeader("Authorization") String authHeader) throws MessagingException {
+    public ResponseEntity<Map<String, Object>> verifyCurrentEmail(@RequestHeader("Authorization") String authHeader,
+                                                                  @RequestHeader(value = "Accept-Language", required = false) String lang) throws MessagingException {
         Map<String, Object> response = new HashMap<>();
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", messageSource.getMessage("authorization.header.invalid",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -60,7 +66,7 @@ public class SettingsRestController {
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", "email.not.found");
             response.put("status", HttpStatus.NOT_FOUND.value());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
@@ -70,28 +76,31 @@ public class SettingsRestController {
         user.setEmailVerified(false);
         userService.save(user);
 
-        String subject = "Confirm Your Current Email";
-        String body = "Your verification code: " + verificationCode;
+        String subject =messageSource.getMessage("c.c.e",null,locale);
+        String body = messageSource.getMessage("email.verification.body", new Object[]{verificationCode}, locale);
         emailService.sendVerificationEmail(email, user.getFirstName(), subject, body);
 
-        response.put("message", "Verification code sent to current email.");
+        response.put("message", messageSource.getMessage("verification.code.sent", null, locale));
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/confirmCurrentEmail")
     public ResponseEntity<Map<String, Object>> confirmCurrentEmail(@RequestBody Map<String, String> requestBody,
-                                                                   @RequestHeader("Authorization") String authHeader) {
+                                                                   @RequestHeader("Authorization") String authHeader,
+                                                                   @RequestHeader(value = "Accept-Language", required = false) String lang)  {
         Map<String, Object> response = new HashMap<>();
         String verificationCode = requestBody.get("verificationCode");
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", messageSource.getMessage("authorization.header.invalid",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
+
         if (verificationCode == null || verificationCode.isEmpty()) {
-            response.put("message", "Verification code is required.");
+            response.put("message", messageSource.getMessage("invalid.verification.code",null,locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
@@ -101,7 +110,7 @@ public class SettingsRestController {
         User user = userService.findByEmail(email);
 
         if (user == null || !verificationCode.equals(user.getVerificationCode())) {
-            response.put("message", "Invalid verification code.");
+            response.put("message", messageSource.getMessage("invalid.verification.code",null,locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
@@ -109,18 +118,21 @@ public class SettingsRestController {
         user.setVerificationCode(null);
         userService.save(user);
 
-        response.put("message", "Current email verified successfully");
+        response.put("message",messageSource.getMessage("email.verified.success",null,locale));
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/sendNewEmailVerification")
-    public ResponseEntity<Map<String, Object>> sendNewEmailVerification(@RequestBody Map<String, String> requestBody,
-                                                                        @RequestHeader("Authorization") String authHeader) throws MessagingException {
+    public ResponseEntity<Map<String, Object>> sendNewEmailVerification(
+            @RequestBody Map<String, String> requestBody,
+            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader(value = "Accept-Language", required = false) String lang)  throws MessagingException {
         Map<String, Object> response = new HashMap<>();
-
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
+        // Validate Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", messageSource.getMessage("authorization.header.invalid",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -130,42 +142,57 @@ public class SettingsRestController {
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", messageSource.getMessage("email.not.found",null,locale));
             response.put("status", HttpStatus.NOT_FOUND.value());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
+
         String newEmail = requestBody.get("newEmail");
         if (newEmail == null || newEmail.isEmpty() || newEmail.equals(email)) {
-            response.put("message", "Invalid or duplicate email provided.");
+            response.put("message", messageSource.getMessage("invalid.or.duplicate.email",null,locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        String verificationCode = VerificationUtil.generateVerificationCode();
-        user.setVerificationCode(verificationCode);
-        user.setEmailVerified(false);
-        user.setEmail(newEmail);
-        userService.save(user);
+        try {
+            String verificationCode = VerificationUtil.generateVerificationCode();
+            user.setVerificationCode(verificationCode);
+            user.setEmailVerified(false);
+            user.setEmail(newEmail);
+            userService.save(user);
 
-        String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail());
-        response.put("New Token", newToken);
+            String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail());
+            response.put("New Token", newToken);
 
-        String subject = "Confirm Your New Email";
-        String body = "Your verification code: " + verificationCode;
-        emailService.sendVerificationEmail(newEmail, user.getFirstName(), subject, body);
+            String subject = messageSource.getMessage("new.email.subject",null,locale);
+            String body = messageSource.getMessage("email.verification.body", new Object[]{verificationCode}, locale);
+            emailService.sendVerificationEmail(newEmail, user.getFirstName(), subject, body);
 
-        response.put("message", "Verification code sent to new email.");
-        response.put("status", HttpStatus.OK.value());
-        return ResponseEntity.ok(response);
+
+            response.put("message", messageSource.getMessage("verification.code.sent", null, locale));
+            response.put("status", HttpStatus.OK.value());
+            return ResponseEntity.ok(response);
+
+        } catch (DataIntegrityViolationException ex) {
+            // Handle duplicate email error
+            response.put("message", "email.already.exists");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (Exception ex) {
+            // Handle other unexpected errors
+            response.put("message", messageSource.getMessage("unexpected.error", null, locale));
+            response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
-
     @PostMapping("/confirmNewEmail")
     public ResponseEntity<Map<String, Object>> confirmNewEmail(@RequestBody Map<String, String> requestBody,
-                                                               @RequestHeader("Authorization") String authHeader) {
+                                                               @RequestHeader("Authorization") String authHeader,
+                                                               @RequestHeader(value = "Accept-Language", required = false) String lang)  {
         Map<String, Object> response = new HashMap<>();
-
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", messageSource.getMessage("authorization.header.invalid",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -175,7 +202,7 @@ public class SettingsRestController {
         User user = userService.findByEmail(email);  //find user by extracted email
 
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", messageSource.getMessage("email.not.found",null,locale));
             response.put("status", HttpStatus.NOT_FOUND.value());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
@@ -183,7 +210,7 @@ public class SettingsRestController {
         String verificationCode = requestBody.get("verificationCode");
 
         if (verificationCode == null || verificationCode.isEmpty() || !verificationCode.equals(user.getVerificationCode())) {
-            response.put("message", "Invalid verification code.");
+            response.put("message", messageSource.getMessage("invalid.verification.code",null,locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
@@ -195,18 +222,19 @@ public class SettingsRestController {
         String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail());
 
         response.put("New Token", newToken);
-        response.put("message", "New email verified and updated successfully.");
+        response.put("message", messageSource.getMessage("new.email.success",null,locale));
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/email")
-    public ResponseEntity<Map<String, Object>> email(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<Map<String, Object>> email(@RequestHeader("Authorization") String authHeader,
+                                                     @RequestHeader(value = "Accept-Language", required = false) String lang)  {
         Map<String, Object> response = new HashMap<>();
-
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         // Validate the Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", messageSource.getMessage("authorization.header.invalid",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -217,7 +245,7 @@ public class SettingsRestController {
 
         User user = userService.findByEmail(email);
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", messageSource.getMessage("email.not.found",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -229,24 +257,25 @@ public class SettingsRestController {
 
     @PutMapping("/changePassword")
     public ResponseEntity<Map<String, Object>> changePassword(@RequestBody ChangePasswordRequest request,
-                                                              @RequestHeader("Authorization") String authHeader) throws MessagingException {
+                                                              @RequestHeader("Authorization") String authHeader,
+                                                              @RequestHeader(value = "Accept-Language", required = false) String lang)  throws MessagingException {
         Map<String, Object> response = new HashMap<>();
-
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", messageSource.getMessage("authorization.header.invalid",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
         if (request.getOldPassword().equals(request.getNewPassword())) {
-            response.put("message", "Old password can't be the same as the new password.");
+            response.put("message",messageSource.getMessage("pass.new",null,locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
         String passwordPattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
         if (!request.getNewPassword().matches(passwordPattern)) {
-            response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character.");
+            response.put("message", messageSource.getMessage("password.pattern.invalid",null,locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
@@ -256,13 +285,13 @@ public class SettingsRestController {
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", messageSource.getMessage("email.not.found",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
         if (!userService.isPasswordValid(user, request.getOldPassword())) {
-            response.put("message", "Old password is incorrect.");
+            response.put("message",messageSource.getMessage("pass.old",null,locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
@@ -271,29 +300,30 @@ public class SettingsRestController {
 
         String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail());
 
-        response.put("message", "Password changed successfully.");
+        response.put("message", messageSource.getMessage("pass.success.subject",null,locale));
         response.put("New Token", newToken);
 
-        String subject = "Password Changed Successfully";
-        String body = "Your password has been changed successfully on " + user.getUpdatedAt() + ".";
+        String subject = messageSource.getMessage("pass.success.subject",null,locale);
+        String body = messageSource.getMessage("pass.success.body", null, locale);
         emailService.passwordChangedEmail(user.getEmail(), user.getFirstName(), subject, body);
 
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/verify_delAcc")
-    public ResponseEntity<Map<String, Object>> verifyDeleteAccount(@RequestBody DeleteAccountRequest request) {
+    public ResponseEntity<Map<String, Object>> verifyDeleteAccount(@RequestBody DeleteAccountRequest request,
+                                                                   @RequestHeader(value = "Accept-Language", required = false) String lang)  {
         Map<String, Object> response = new HashMap<>();
         User user = userService.findByEmail(request.getEmail());
-
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         if (user == null) {
-            response.put("message", "Invalid email.");
+            response.put("message", messageSource.getMessage("email.not.found",null,locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            response.put("message", "Invalid password.");
+            response.put("message", messageSource.getMessage("invalid.password",null,locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
@@ -301,38 +331,41 @@ public class SettingsRestController {
         String deletionToken = jwtUtil.generateDeletionToken(user.getEmail());
         userService.saveDeletionToken(user, deletionToken);
 
-        response.put("message", "Are you sure you want to delete your account?");
+        response.put("message", messageSource.getMessage("verify.del.acc.subject",null,locale));
         response.put("deletionToken", deletionToken);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/confirm_delAcc")
-    public ResponseEntity<Map<String, Object>> confirmDeleteAccount(@RequestHeader("Deletion-Token") String deletionToken) throws MessagingException {
+    public ResponseEntity<Map<String, Object>> confirmDeleteAccount(@RequestHeader("Deletion-Token") String deletionToken,
+                                                                    @RequestHeader(value = "Accept-Language", required = false) String lang)  throws MessagingException {
         Map<String, Object> response = new HashMap<>();
         String delToken = jwtUtil.validateDeletionToken(deletionToken);
-
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         User user = userService.findByEmail(delToken);
         if (user == null || !userService.isDeletionTokenValid(user, deletionToken)) {
-            response.put("message", "Invalid or expired deletion token");
+            response.put("message", messageSource.getMessage("authorization.header.invalid",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
         userService.deleteAccount(user);
-        emailService.accountDeletedEmail(user.getEmail(), user.getFirstName(), "Account deleted successfully", "Your account was deleted on " + user.getUpdatedAt() + ".");
 
-        response.put("message", "Account deleted successfully");
+        emailService.accountDeletedEmail(user.getEmail(), user.getFirstName(), locale, user.getUpdatedAt());
+
+        response.put("message", messageSource.getMessage("account.deleted.subject",null,locale));
         return ResponseEntity.ok(response);
     }
 
 
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, Object>> logout(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<Map<String, Object>> logout(@RequestHeader("Authorization") String authHeader,
+                                                      @RequestHeader(value = "Accept-Language", required = false) String lang)  {
         Map<String, Object> response = new HashMap<>();
-
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         //validate the Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", messageSource.getMessage("authorization.header.invalid",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -343,7 +376,7 @@ public class SettingsRestController {
         //blacklist the token
         tokenBlacklistService.blacklistToken(token);
 
-        response.put("message", "Logged out successfully.");
+        response.put("message", messageSource.getMessage("logout.success",null,locale));
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
@@ -351,17 +384,18 @@ public class SettingsRestController {
     //profile picture upload
     @PostMapping("/uploadProfilePicture")
     public ResponseEntity<Map<String, Object>> uploadProfilePicture(@RequestParam("image") MultipartFile file,
-                                                                    @RequestHeader("Authorization") String authHeader) {
+                                                                    @RequestHeader("Authorization") String authHeader,
+                                                                    @RequestHeader(value = "Accept-Language", required = false) String lang)  {
         Map<String, Object> response = new HashMap<>();
-
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", messageSource.getMessage("authorization.header.invalid",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
         //2MB max
         if (file.getSize() > 2 * 1024 * 1024) {
-            response.put("message", "Image size must be less than 2MB.");
+            response.put("message", messageSource.getMessage("file.too.large",null,locale));
             return ResponseEntity.badRequest().body(response);
         }
 
@@ -370,16 +404,16 @@ public class SettingsRestController {
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", messageSource.getMessage("email.not.found",null,locale));
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
         try {
             user.setProfilePicture(file.getBytes());
             userService.save(user);
-            response.put("message", "Profile picture uploaded successfully.");
+            response.put("message", messageSource.getMessage("profile.picture.uploaded",null,locale));
             return ResponseEntity.ok(response);
         } catch (IOException e) {
-            response.put("message", "Failed to process image.");
+            response.put("message", messageSource.getMessage("image.failed",null,locale));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

@@ -6,14 +6,12 @@ import com.example.crud.service.EmergencyContactService;
 import com.example.crud.service.UserService;
 import com.example.crud.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/GP/emergency")
@@ -22,42 +20,44 @@ public class EmergencyContactController {
     private final EmergencyContactService emergencyContactService;
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private MessageSource messageSource;
     @Autowired
-    public EmergencyContactController(EmergencyContactService emergencyContactService, UserService userService, JwtUtil jwtUtil) {
+    public EmergencyContactController(EmergencyContactService emergencyContactService, UserService userService, JwtUtil jwtUtil,MessageSource messageSource) {
         this.emergencyContactService = emergencyContactService;
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.messageSource=messageSource;
     }
 
     //add a new emergency contact
     @PostMapping("/add")
     public ResponseEntity<Map<String, Object>> addEmergencyContact(
-            @RequestBody EmergencyContact contact, @RequestHeader("Authorization") String authHeader) {
-        Map<String, Object> response = new HashMap<>();
+            @RequestBody EmergencyContact contact, @RequestHeader("Authorization") String authHeader,
+            @RequestHeader(value = "Accept-Language", required = false) String lang) {
 
+        Map<String, Object> response = new HashMap<>();
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         // Validate the Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", messageSource.getMessage("authorization.header.invalid",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
-
         //extract the token
         String token = authHeader.replace("Bearer ", "");
 
         //extract email/username from the token
         String email = jwtUtil.extractEmail(token);
-
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", messageSource.getMessage("email.not.found",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
         boolean contactExists = emergencyContactService.existsByPhoneAndUser(contact.getPhone(), user);
         if (contactExists) {
-            response.put("message", "A contact with the same phone number already exists");
+            response.put("message", messageSource.getMessage("same.number",null,locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
@@ -66,7 +66,7 @@ public class EmergencyContactController {
         contact.setUser(user);
         EmergencyContact savedContact = emergencyContactService.addContact(contact);
 
-        response.put("message", "Emergency contact added successfully.");
+        response.put("message", messageSource.getMessage("contact.added",null,locale));
         response.put("contact", savedContact);
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
@@ -74,12 +74,13 @@ public class EmergencyContactController {
 
     //get all emergency contacts for logged-in user
     @GetMapping("/list")
-    public ResponseEntity<Map<String, Object>> listEmergencyContacts(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<Map<String, Object>> listEmergencyContacts(@RequestHeader("Authorization") String authHeader,
+                                                                     @RequestHeader(value = "Accept-Language", required = false) String lang) {
         Map<String, Object> response = new HashMap<>();
-
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         // Validate the Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", messageSource.getMessage("authorization.header.invalid",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -90,21 +91,19 @@ public class EmergencyContactController {
 
         User user = userService.findByEmail(email);
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", messageSource.getMessage("email.not.found",null,locale));
             response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-        System.out.println("User Retrieved: " + user);
         List<EmergencyContact> contacts = emergencyContactService.getContactsByUserId(user.getId());
 
         if (contacts.isEmpty()) {
-            response.put("message", "No emergency contacts found.");
+            response.put("message", messageSource.getMessage("empty.list",null,locale));
             response.put("contacts", Collections.emptyList());
             response.put("status", HttpStatus.OK.value());
             return ResponseEntity.ok(response);
         }
 
-        response.put("message", "Emergency contacts retrieved successfully.");
         response.put("contacts", contacts);
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
@@ -113,12 +112,13 @@ public class EmergencyContactController {
     //udate an existing emergency contact
     @PutMapping("/update/{contactId}")
     public ResponseEntity<Map<String, Object>> updateEmergencyContact(
-            @PathVariable int contactId, @RequestBody EmergencyContact updatedContact, @RequestHeader("Authorization") String authHeader) {
+            @PathVariable int contactId, @RequestBody EmergencyContact updatedContact, @RequestHeader("Authorization") String authHeader,
+            @RequestHeader(value = "Accept-Language", required = false) String lang) {
         Map<String, Object> response = new HashMap<>();
-
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         //validate the Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", messageSource.getMessage("authorization.header.invalid",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -129,7 +129,7 @@ public class EmergencyContactController {
 
         User user = userService.findByEmail(email);
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", messageSource.getMessage("email.not.found",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -137,7 +137,7 @@ public class EmergencyContactController {
         //find and validate the existing contact
         EmergencyContact existingContact = emergencyContactService.findById(contactId);
         if (existingContact == null || existingContact.getUser().getId() != user.getId()) {
-            response.put("message", "Emergency contact not found or access denied.");
+            response.put("message", messageSource.getMessage("contact.not.found",null,locale));
             response.put("status", HttpStatus.NOT_FOUND.value());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
@@ -147,7 +147,7 @@ public class EmergencyContactController {
         existingContact.setPhone(updatedContact.getPhone());
         EmergencyContact savedContact = emergencyContactService.addContact(existingContact);
 
-        response.put("message", "Emergency contact updated successfully.");
+        response.put("message", messageSource.getMessage("contact.updated",null,locale));
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
@@ -155,12 +155,13 @@ public class EmergencyContactController {
     //delete an emergency contact
     @DeleteMapping("/delete/{contactId}")
     public ResponseEntity<Map<String, Object>> deleteEmergencyContact(
-            @PathVariable int contactId, @RequestHeader("Authorization") String authHeader) {
+            @PathVariable int contactId, @RequestHeader("Authorization") String authHeader,
+            @RequestHeader(value = "Accept-Language", required = false) String lang) {
         Map<String, Object> response = new HashMap<>();
-
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         // Validate the Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", messageSource.getMessage("authorization.header.invalid",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -171,7 +172,7 @@ public class EmergencyContactController {
 
         User user = userService.findByEmail(email);
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", messageSource.getMessage("email.not.found",null,locale));
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -179,7 +180,7 @@ public class EmergencyContactController {
         // Find and validate the existing contact
         EmergencyContact existingContact = emergencyContactService.findById(contactId);
         if (existingContact == null || existingContact.getUser().getId() != user.getId()) {
-            response.put("message", "Emergency contact not found or access denied.");
+            response.put("message", messageSource.getMessage("contact.not.found",null,locale));
             response.put("status", HttpStatus.NOT_FOUND.value());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
@@ -187,7 +188,7 @@ public class EmergencyContactController {
         // Delete the contact
         emergencyContactService.deleteContact(contactId);
 
-        response.put("message", "Emergency contact deleted successfully.");
+        response.put("message", messageSource.getMessage("contact.deleted",null,locale));
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }

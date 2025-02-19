@@ -40,9 +40,10 @@ public class UserRestController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<Map<String, Object>> signUp(@RequestBody User user) throws MessagingException {
+    public ResponseEntity<Map<String, Object>> signUp(@RequestBody User user,
+                                                      @RequestHeader(value = "Accept-Language", required = false) String lang) throws MessagingException {
         Map<String, Object> response = new HashMap<>();
-
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         User existingUser = userService.findByEmail(user.getEmail());
 
         //if email exists but not verified, resend verification code
@@ -52,16 +53,16 @@ public class UserRestController {
                 existingUser.setVerificationCode(newVerificationCode);
                 userService.save(existingUser);
 
-                String subject = "Resend Email Verification";
-                String body = "Please verify your email using this new code: " + newVerificationCode;
+                String subject = messageSource.getMessage("email.resend.verification.subject", null, locale);
+                String body = messageSource.getMessage("verification.code.sent", new Object[]{newVerificationCode}, locale);
                 emailService.sendVerificationEmail(existingUser.getEmail(), existingUser.getFirstName(), subject, body);
 
-                response.put("message", "A new verification code has been sent. Please verify your email.");
+                response.put("message", messageSource.getMessage("verification.code.sent", null, locale));
                 return ResponseEntity.ok(response);
             }
 
             //email already exists and verified
-            response.put("message", "Email already exists");
+            response.put("message",messageSource.getMessage("email.already.exists", null, locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
@@ -69,7 +70,7 @@ public class UserRestController {
         //new user signup Process
         String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
         if (!user.getPassword().matches(passwordPattern)) {
-            response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character.");
+            response.put("message", messageSource.getMessage("password.invalid.format", null, locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
@@ -83,21 +84,21 @@ public class UserRestController {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userService.save(user);
 
-        String subject = "Email Verification";
-        String body = "Please verify your email using this code: " + verificationCode;
+        String subject =  messageSource.getMessage("email.verification.subject", null, locale);
+        String body = messageSource.getMessage("email.verification.body", new Object[]{verificationCode}, locale);
         emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), subject, body);
 
-        response.put("message", "Sign-up successful! Please verify your email.");
+        response.put("message", messageSource.getMessage("signup.success",null,locale));
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/verifyEmail")
-    public ResponseEntity<Map<String, Object>> verifyEmail(@RequestParam String code) {
+    public ResponseEntity<Map<String, Object>> verifyEmail(@RequestParam String code,@RequestHeader(value = "Accept-Language", required = false) String lang) {
         Map<String, Object> response = new HashMap<>();
-
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         User user = userService.findByVerificationCode(code);
         if (user == null) {
-            response.put("message", "Invalid verification code.");
+            response.put("message",messageSource.getMessage("invalid.verification.code", null, locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
@@ -112,7 +113,7 @@ public class UserRestController {
 
         String token = jwtUtil.generateToken(user.getUsername(), user.getEmail());
 
-        response.put("message", "Email verified successfully!");
+        response.put("message", messageSource.getMessage("email.verified.success", null, locale));
         response.put("token", token);
         return ResponseEntity.ok(response);
     }
@@ -157,12 +158,13 @@ public class UserRestController {
      }
 
     @PostMapping("/forgot_password")
-    public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody User request) throws MessagingException {
+    public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody User request,
+                                                              @RequestHeader(value = "Accept-Language", required = false) String lang) throws MessagingException {
         Map<String, Object> response = new HashMap<>();
-
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         User user = userService.findByEmail(request.getEmail());
         if (user == null) {
-            response.put("message", "Email not found.");
+            response.put("message", messageSource.getMessage("email.not.found", null,locale));
             response.put("status", HttpStatus.NOT_FOUND.value());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
@@ -173,49 +175,52 @@ public class UserRestController {
         user.setTokenExpiration(new Date(System.currentTimeMillis() + 15 * 60 * 1000)); //valid for 15 minute
         userService.save(user);
 
-        String subject = "Password Reset";
-        String body = "Use this code to confirm your email: " + resetToken;
+        String subject =messageSource.getMessage("Password.Reset", null, locale);
+        String body = messageSource.getMessage("Password.Reset.Body", new Object[]{resetToken}, locale);
         emailService.passwordForgottenEmail(user.getEmail(), user.getFirstName(), subject, body);
 
-        response.put("message", "email confirmation code sent to your email.");
+        response.put("message", messageSource.getMessage("email.confirm", null, locale));
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/confirm_reset_code")
-    public ResponseEntity<Map<String, Object>> confirmResetToken(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Map<String, Object>> confirmResetToken(@RequestBody Map<String, String> request,
+                                                                 @RequestHeader(value = "Accept-Language", required = false) String lang) {
         Map<String, Object> response = new HashMap<>();
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         String code = request.get("token");
 
         User user = userService.findByResetToken(code);
         if (user == null || user.getResetToken() == null || user.getTokenExpiration().before(new Date())) {
-            response.put("message", "Invalid or expired code.");
+            response.put("message", messageSource.getMessage("invalid.verification.code", null, locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        response.put("message", "Code is valid.");
+        response.put("message", messageSource.getMessage("valid", null, locale));
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/reset_password")
-    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody ResetPasswordRequest request) throws MessagingException {
+    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody ResetPasswordRequest request,
+                                                             @RequestHeader(value = "Accept-Language", required = false) String lang) throws MessagingException {
         Map<String, Object> response = new HashMap<>();
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         String code = request.getToken();
         User user = userService.findByResetToken(code);
 
         if (user == null || user.getResetToken() == null || user.getTokenExpiration().before(new Date())) {
-            response.put("message", "Invalid or expired code.");
+            response.put("message", messageSource.getMessage("invalid.verification.code", null, locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
         String passwordPattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
-        System.out.println("New Password: " + request.getNewPassword());
-        System.out.println("Pattern Matches: " + request.getNewPassword().matches(passwordPattern));
+
         if (!request.getNewPassword().matches(passwordPattern)) {
-            response.put("message", "Password must be at least 10 characters long and include at least one lowercase letter, one uppercase letter, one number, and one special character.");
+            response.put("message", messageSource.getMessage("password.invalid.format", null, locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
@@ -226,22 +231,24 @@ public class UserRestController {
         user.setUpdatedAt(new Date());
         userService.save(user);
         //send confirmation email
-        String subject = "Password Changed Successfully";
-        String body = "Your password has been changed successfully on " + user.getUpdatedAt() + ".";
+        String subject = messageSource.getMessage("pass.success.subject", null, locale);
+        String body = messageSource.getMessage("pass.success.body", null, locale);
         emailService.passwordChangedEmail(user.getEmail(), user.getFirstName(), subject, body);
 
-        response.put("message", "Password reset successful.");
+        response.put("message", messageSource.getMessage("pass.success", null, locale));
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/resendVerification")
-    public ResponseEntity<Map<String, Object>> resendVerification(@RequestBody Map<String, String> requestBody) throws MessagingException {
+    public ResponseEntity<Map<String, Object>> resendVerification(@RequestBody Map<String, String> requestBody,
+                                                                  @RequestHeader(value = "Accept-Language", required = false) String lang) throws MessagingException {
         Map<String, Object> response = new HashMap<>();
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         String email = requestBody.get("email");
 
         if (email == null || email.isEmpty()) {
-            response.put("message", "Email is required.");
+            response.put("message", messageSource.getMessage("email.not.found", null, locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
@@ -250,12 +257,12 @@ public class UserRestController {
             user = userService.findByEmail(email);
 
             if (!user.getEmail().equals(email)) {
-                response.put("message", "You can only request verification for your pending email.");
+                    response.put("message", messageSource.getMessage("resend", null, locale));
                 response.put("status", HttpStatus.FORBIDDEN.value());
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
         if (user.isEmailVerified()) {
-            response.put("message", "Email is already verified.");
+            response.put("message", messageSource.getMessage("already.verified", null, locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
@@ -264,20 +271,22 @@ public class UserRestController {
         user.setVerificationCode(newVerificationCode);
         userService.save(user);
 
-        String subject = "Resend Email Verification";
-        String body = "Please verify your email using this new code: " + newVerificationCode;
+        String subject = messageSource.getMessage("email.resend.verification.subject", null, locale);
+        String body = messageSource.getMessage("resend.body", new Object[]{newVerificationCode}, locale);
         emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), subject, body);
 
-        response.put("message", "A new verification code has been sent to your email");
+        response.put("message",messageSource.getMessage("verification.code.sent", null, locale));
         return ResponseEntity.ok(response);
 }
     @PostMapping("/resendForgot")
-    public ResponseEntity<Map<String, Object>> resendForgot(@RequestBody Map<String, String> requestBody) throws MessagingException {
+    public ResponseEntity<Map<String, Object>> resendForgot(@RequestBody Map<String, String> requestBody,
+                                                            @RequestHeader(value = "Accept-Language", required = false) String lang) throws MessagingException {
         Map<String, Object> response = new HashMap<>();
+        Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         String email = requestBody.get("email");
 
         if (email == null || email.isEmpty()) {
-            response.put("message", "Email is required.");
+            response.put("message", messageSource.getMessage("email.not.found", null, locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
@@ -292,11 +301,10 @@ public class UserRestController {
         userService.save(user);
 
 
-        String subject = "Resend Email Verification";
-        String body = "Please verify your email using this new code: " + resetToken;
+        String subject = messageSource.getMessage("email.resend.verification.subject", null, locale);
+        String body = messageSource.getMessage("resend.body", new Object[]{resetToken}, locale);
         emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), subject, body);
-
-        response.put("message", "A new verification code has been sent to your email");
+        response.put("message",messageSource.getMessage("verification.code.sent", null, locale));
         return ResponseEntity.ok(response);
     }
 
