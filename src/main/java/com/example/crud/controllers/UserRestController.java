@@ -9,6 +9,7 @@ import com.example.crud.service.UserService;
 import com.example.crud.util.JwtUtil;
 import com.example.crud.util.VerificationUtil;
 import jakarta.mail.MessagingException;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,14 +27,16 @@ public class UserRestController {
     private VerificationUtil verficationUtil;
     private JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private MessageSource messageSource;
 
 
-    public UserRestController(UserService theUserService, AuthorityService authorityService, EmailService emailService, PasswordEncoder passwordEncoder,JwtUtil jwtUtil) {
+    public UserRestController(UserService theUserService, AuthorityService authorityService, EmailService emailService, PasswordEncoder passwordEncoder,JwtUtil jwtUtil,MessageSource messageSource) {
         this.userService = theUserService;
         this.authorityService = authorityService;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil=jwtUtil;
+        this.messageSource=messageSource;
     }
 
     @PostMapping("/signup")
@@ -115,37 +118,39 @@ public class UserRestController {
     }
      //Login endpoint
      @PostMapping("/login")
-     public ResponseEntity<Map<String, Object>> loginUser(@RequestBody User loginRequest) throws MessagingException {
+     public ResponseEntity<Map<String, Object>> loginUser(@RequestBody User loginRequest,
+                                                          @RequestHeader(value = "Accept-Language", required = false) String lang) throws MessagingException {
          Map<String, Object> response = new HashMap<>();
-
+         Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
          User user = userService.findByEmail(loginRequest.getEmail());
 
          if (user == null) {
-             response.put("message", "Email not found.");
+             response.put("message", messageSource.getMessage("email.not.found", null, locale));
              response.put("status", HttpStatus.BAD_REQUEST.value());
              return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
          }
 
          if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-             response.put("message", "Invalid password.");
+             response.put("message", messageSource.getMessage("invalid.password", null, locale));
              response.put("status", HttpStatus.BAD_REQUEST.value());
              return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
          }
 
          if (!user.isEmailVerified()) {
-             response.put("message", "Email is not verified. Please verify your email");
+             response.put("message", messageSource.getMessage("email.not.verified", null, locale));
              response.put("status", HttpStatus.FORBIDDEN.value());
+
              String verificationCode = VerificationUtil.generateVerificationCode();
              user.setVerificationCode(verificationCode);
-             String subject = "Email Verification";
-             String body = "Please verify your email using this code: " + verificationCode;
+             String subject = messageSource.getMessage("email.verification.subject", null, locale);
+             String body = messageSource.getMessage("email.verification.body", new Object[]{verificationCode}, locale);
              emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), subject, body);
              return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
          }
 
          String token = jwtUtil.generateToken(user.getUsername(), user.getEmail());
 
-         response.put("message", "Login successful.");
+         response.put("message", messageSource.getMessage("login.success", null, locale));
          response.put("token", token);
 
          return ResponseEntity.ok(response);
