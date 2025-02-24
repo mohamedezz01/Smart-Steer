@@ -175,7 +175,7 @@ public class SettingsRestController {
 
         } catch (DataIntegrityViolationException ex) {
             // Handle duplicate email error
-            response.put("message", "email.already.exists");
+            response.put("message", messageSource.getMessage("email.already.exists",null,locale));
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (Exception ex) {

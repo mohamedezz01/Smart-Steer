@@ -163,6 +163,7 @@ public class UserRestController {
         Map<String, Object> response = new HashMap<>();
         Locale locale = (lang != null && lang.equalsIgnoreCase("ar")) ? new Locale("ar") : new Locale("en");
         User user = userService.findByEmail(request.getEmail());
+
         if (user == null) {
             response.put("message", messageSource.getMessage("email.not.found", null,locale));
             response.put("status", HttpStatus.NOT_FOUND.value());
