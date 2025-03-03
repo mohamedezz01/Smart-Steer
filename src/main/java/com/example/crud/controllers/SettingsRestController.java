@@ -12,6 +12,7 @@ import com.example.crud.service.UserService;
 import com.example.crud.util.JwtUtil;
 import com.example.crud.util.VerificationUtil;
 import jakarta.mail.MessagingException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -140,23 +141,37 @@ public class SettingsRestController {
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+        try {
+            String verificationCode = VerificationUtil.generateVerificationCode();
+            user.setVerificationCode(verificationCode);
+            user.setEmailVerified(false);
+            user.setEmail(newEmail);
+            userService.save(user);
 
-        String verificationCode = VerificationUtil.generateVerificationCode();
-        user.setVerificationCode(verificationCode);
-        user.setEmailVerified(false);
-        user.setEmail(newEmail);
-        userService.save(user);
+            String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail());
+            response.put("New Token", newToken);
 
-        String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail());
-        response.put("New Token", newToken);
+            String subject = "Confirm Your New Email";
+            String body = "Your verification code: " + verificationCode;
+            emailService.sendVerificationEmail(newEmail, user.getFirstName(), subject, body);
 
-        String subject = "Confirm Your New Email";
-        String body = "Your verification code: " + verificationCode;
-        emailService.sendVerificationEmail(newEmail, user.getFirstName(), subject, body);
 
-        response.put("message", "Verification code sent to new email.");
-        response.put("status", HttpStatus.OK.value());
-        return ResponseEntity.ok(response);
+            response.put("message", "Verification code sent to new email.");
+            response.put("status", HttpStatus.OK.value());
+            return ResponseEntity.ok(response);
+
+        } catch (DataIntegrityViolationException ex) {
+            //handle duplicate email error sql
+            response.put("message","Email already exists. Please try a different email");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (Exception ex) {
+            //other unexpected errors
+            response.put("message", "Unexpected error occurred. Please try again later or contact the administrator");
+            response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+
     }
 
     @PostMapping("/confirmNewEmail")
