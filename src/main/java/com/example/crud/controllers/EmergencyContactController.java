@@ -37,7 +37,7 @@ public class EmergencyContactController {
 
         // Validate the Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", "Authorization header missing or invalid");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -51,7 +51,7 @@ public class EmergencyContactController {
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", "User not found");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -66,7 +66,7 @@ public class EmergencyContactController {
         contact.setUser(user);
         EmergencyContact savedContact = emergencyContactService.addContact(contact);
 
-        response.put("message", "Emergency contact added successfully.");
+        response.put("message", "Emergency contact added successfully");
         response.put("contact", savedContact);
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
@@ -79,7 +79,7 @@ public class EmergencyContactController {
 
         // Validate the Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", "Authorization header missing or invalid");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -90,21 +90,21 @@ public class EmergencyContactController {
 
         User user = userService.findByEmail(email);
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", "User not found");
             response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-        System.out.println("User Retrieved: " + user);
+
         List<EmergencyContact> contacts = emergencyContactService.getContactsByUserId(user.getId());
 
         if (contacts.isEmpty()) {
-            response.put("message", "No emergency contacts found.");
+            response.put("message", "No emergency contacts found");
             response.put("contacts", Collections.emptyList());
             response.put("status", HttpStatus.OK.value());
             return ResponseEntity.ok(response);
         }
 
-        response.put("message", "Emergency contacts retrieved successfully.");
+        response.put("message", "Emergency contacts retrieved successfully");
         response.put("contacts", contacts);
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
@@ -118,7 +118,7 @@ public class EmergencyContactController {
 
         //validate the Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", "Authorization header missing or invalid");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -129,7 +129,7 @@ public class EmergencyContactController {
 
         User user = userService.findByEmail(email);
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", "User not found");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -137,7 +137,7 @@ public class EmergencyContactController {
         //find and validate the existing contact
         EmergencyContact existingContact = emergencyContactService.findById(contactId);
         if (existingContact == null || existingContact.getUser().getId() != user.getId()) {
-            response.put("message", "Emergency contact not found or access denied.");
+            response.put("message", "Emergency contact not found or access denied");
             response.put("status", HttpStatus.NOT_FOUND.value());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
@@ -147,7 +147,7 @@ public class EmergencyContactController {
         existingContact.setPhone(updatedContact.getPhone());
         EmergencyContact savedContact = emergencyContactService.addContact(existingContact);
 
-        response.put("message", "Emergency contact updated successfully.");
+        response.put("message", "Emergency contact updated successfully");
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
@@ -160,7 +160,7 @@ public class EmergencyContactController {
 
         // Validate the Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", "Authorization header missing or invalid");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -171,7 +171,7 @@ public class EmergencyContactController {
 
         User user = userService.findByEmail(email);
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", "User not found");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -179,7 +179,7 @@ public class EmergencyContactController {
         // Find and validate the existing contact
         EmergencyContact existingContact = emergencyContactService.findById(contactId);
         if (existingContact == null || existingContact.getUser().getId() != user.getId()) {
-            response.put("message", "Emergency contact not found or access denied.");
+            response.put("message", "Emergency contact not found or access denied");
             response.put("status", HttpStatus.NOT_FOUND.value());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
@@ -187,7 +187,7 @@ public class EmergencyContactController {
         // Delete the contact
         emergencyContactService.deleteContact(contactId);
 
-        response.put("message", "Emergency contact deleted successfully.");
+        response.put("message", "Emergency contact deleted successfully");
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }

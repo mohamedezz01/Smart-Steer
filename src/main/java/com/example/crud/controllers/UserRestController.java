@@ -1,9 +1,7 @@
 package com.example.crud.controllers;
 
-import com.example.crud.entity.Authority;
 import com.example.crud.dto.ResetPasswordRequest;
 import com.example.crud.entity.User;
-import com.example.crud.service.AuthorityService;
 import com.example.crud.service.EmailService;
 import com.example.crud.service.UserService;
 import com.example.crud.util.JwtUtil;
@@ -22,7 +20,6 @@ import java.util.*;
 public class UserRestController {
 
     private UserService userService;
-    private AuthorityService authorityService;
     private EmailService emailService;
     private VerificationUtil verficationUtil;
     private JwtUtil jwtUtil;
@@ -30,9 +27,8 @@ public class UserRestController {
     private MessageSource messageSource;
 
 
-    public UserRestController(UserService theUserService, AuthorityService authorityService, EmailService emailService, PasswordEncoder passwordEncoder,JwtUtil jwtUtil,MessageSource messageSource) {
+    public UserRestController(UserService theUserService, EmailService emailService, PasswordEncoder passwordEncoder,JwtUtil jwtUtil,MessageSource messageSource) {
         this.userService = theUserService;
-        this.authorityService = authorityService;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil=jwtUtil;
@@ -56,7 +52,7 @@ public class UserRestController {
                 String body = "Please verify your email using this new code: " + newVerificationCode;
                 emailService.sendVerificationEmail(existingUser.getEmail(), existingUser.getFirstName(), subject, body);
 
-                response.put("message", "A new verification code has been sent. Please verify your email.");
+                response.put("message", "A new verification code has been sent. Please verify your email");
                 return ResponseEntity.ok(response);
             }
 
@@ -69,7 +65,7 @@ public class UserRestController {
         //new user signup Process
         String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
         if (!user.getPassword().matches(passwordPattern)) {
-            response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character.");
+            response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
@@ -87,7 +83,7 @@ public class UserRestController {
         String body = "Please verify your email using this code: " + verificationCode;
         emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), subject, body);
 
-        response.put("message", "Sign-up successful! Please verify your email.");
+        response.put("message", "Sign-up successful! Please verify your email");
         return ResponseEntity.ok(response);
     }
 
@@ -97,20 +93,20 @@ public class UserRestController {
 
         User user = userService.findByVerificationCode(code);
         if (user == null) {
-            response.put("message", "Invalid verification code.");
+            response.put("message", "Invalid verification code");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
 
         user.setEmailVerified(true);
         user.setVerificationCode(null);
+        user.setRoles("ROLE_USER"); // Set role
 
-        Authority auth = new Authority();
-        auth.setUserId(user.getUsername());
-        auth.setAuthority("ROLE_USER");
-        authorityService.save(auth);
+        // Save to database
+        userService.save(user); // Add this line
 
-        String token = jwtUtil.generateToken(user.getUsername(), user.getEmail());
+        List<String> roles = Arrays.asList(user.getRoles().split(","));
+        String token = jwtUtil.generateToken(user.getUsername(), user.getEmail(), roles);
 
         response.put("message", "Email verified successfully!");
         response.put("token", token);
@@ -147,8 +143,9 @@ public class UserRestController {
              emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), subject, body);
              return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
          }
-
-         String token = jwtUtil.generateToken(user.getUsername(), user.getEmail());
+         user.setRoles("ROLE_USER");
+         List<String> roles = Arrays.asList(user.getRoles().split(","));
+         String token = jwtUtil.generateToken(user.getUsername(), user.getEmail(),roles);
 
          response.put("message", messageSource.getMessage("login.success", null, locale));
          response.put("token", token);
@@ -162,7 +159,7 @@ public class UserRestController {
 
         User user = userService.findByEmail(request.getEmail());
         if (user == null) {
-            response.put("message", "Email not found.");
+            response.put("message", "Email not found");
             response.put("status", HttpStatus.NOT_FOUND.value());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
@@ -177,7 +174,7 @@ public class UserRestController {
         String body = "Use this code to confirm your email: " + resetToken;
         emailService.passwordForgottenEmail(user.getEmail(), user.getFirstName(), subject, body);
 
-        response.put("message", "email confirmation code sent to your email.");
+        response.put("message", "email confirmation code sent to your email");
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
@@ -189,12 +186,12 @@ public class UserRestController {
 
         User user = userService.findByResetToken(code);
         if (user == null || user.getResetToken() == null || user.getTokenExpiration().before(new Date())) {
-            response.put("message", "Invalid or expired code.");
+            response.put("message", "Invalid or expired code");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
-        response.put("message", "Code is valid.");
+        response.put("message", "Code is valid");
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
@@ -206,7 +203,7 @@ public class UserRestController {
         User user = userService.findByResetToken(code);
 
         if (user == null || user.getResetToken() == null || user.getTokenExpiration().before(new Date())) {
-            response.put("message", "Invalid or expired code.");
+            response.put("message", "Invalid or expired code");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
@@ -215,7 +212,7 @@ public class UserRestController {
         System.out.println("New Password: " + request.getNewPassword());
         System.out.println("Pattern Matches: " + request.getNewPassword().matches(passwordPattern));
         if (!request.getNewPassword().matches(passwordPattern)) {
-            response.put("message", "Password must be at least 10 characters long and include at least one lowercase letter, one uppercase letter, one number, and one special character.");
+            response.put("message", "Password must be at least 10 characters long and include at least one lowercase letter, one uppercase letter, one number, and one special character");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
@@ -230,7 +227,7 @@ public class UserRestController {
         String body = "Your password has been changed successfully on " + user.getUpdatedAt() + ".";
         emailService.passwordChangedEmail(user.getEmail(), user.getFirstName(), subject, body);
 
-        response.put("message", "Password reset successful.");
+        response.put("message", "Password reset successful");
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
@@ -241,7 +238,7 @@ public class UserRestController {
         String email = requestBody.get("email");
 
         if (email == null || email.isEmpty()) {
-            response.put("message", "Email is required.");
+            response.put("message", "Email is required");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
@@ -250,12 +247,12 @@ public class UserRestController {
             user = userService.findByEmail(email);
 
             if (!user.getEmail().equals(email)) {
-                response.put("message", "You can only request verification for your pending email.");
+                response.put("message", "You can only request verification for your pending email");
                 response.put("status", HttpStatus.FORBIDDEN.value());
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
         if (user.isEmailVerified()) {
-            response.put("message", "Email is already verified.");
+            response.put("message", "Email is already verified");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
@@ -277,7 +274,7 @@ public class UserRestController {
         String email = requestBody.get("email");
 
         if (email == null || email.isEmpty()) {
-            response.put("message", "Email is required.");
+            response.put("message", "Email is required");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
@@ -300,10 +297,12 @@ public class UserRestController {
         return ResponseEntity.ok(response);
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////Admin////////////////////////////////
+
     //get all users
     @GetMapping("/users")
     public List<User>findAll(){
+
         return userService.findAll();
     }
 

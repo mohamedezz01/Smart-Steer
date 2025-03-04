@@ -16,25 +16,57 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .authorizeHttpRequests(configurer ->
+                        configurer
+                                .requestMatchers(HttpMethod.POST,
+                                        "/GP/signup",
+                                        "/GP/login",
+                                        "/GP/verifyEmail",
+                                        "/GP/forgot_password",
+                                        "/GP/reset_password",
+                                        "/GP/confirm_reset_code",
+                                        "/GP/resendForgot"
+                                ).permitAll()
+                                .requestMatchers(HttpMethod.GET, "/GP/admin/users").hasAuthority("ROLE_ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/GP/admin/users/{Id}").hasAuthority("ROLE_ADMIN")
+                                .requestMatchers(HttpMethod.POST,
+                                        "/GP/emergency/add",
+                                        "/GP/settings/logout",
+                                        "/GP/settings/verify_delAcc",  // Correct path
+                                        "/GP/settings/confirmCurrentEmail",
+                                        "/GP/settings/verifyCurrentEmail",
+                                        "/GP/settings/sendNewEmailVerification",
+                                        "/GP/settings/confirmNewEmail",
+                                        "/GP/resendVerification",
+                                        "/GP/settings/uploadProfilePicture",
+                                        "/GP/resendForgot"
+                                ).hasAuthority("ROLE_USER")
+                                .requestMatchers(HttpMethod.GET,
+                                        "/GP/users",
+                                        "/GP/users/**",
+                                        "/GP/emergency/list",
+                                        "/GP/settings/email",
+                                        "/GP/settings/profilePicture"
+                                ).hasAuthority("ROLE_USER")
+                                .requestMatchers(HttpMethod.PUT,
+                                        "/GP/users/**",
+                                        "/GP/emergency/update/{contactId}",
+                                        "/GP/settings/changeEmail",
+                                        "/GP/settings/changePassword"
+                                ).hasAuthority("ROLE_USER")
+                                .requestMatchers(HttpMethod.DELETE,
+                                        "/GP/users/**",
+                                        "/GP/emergency/delete/{contactId}",
+                                        "/GP/settings/confirm_delAcc"
+                                ).hasAuthority("ROLE_USER")
+                                .anyRequest().authenticated()
+                )
+                .httpBasic(Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable());
 
-        http.authorizeHttpRequests(configurer ->
-                configurer
-                        // Public endpoints
-                        .requestMatchers(HttpMethod.POST, "/GP/signup", "/GP/login", "/GP/verifyEmail","/GP/settings/verify_delAcc",
-                                "/GP/forgot_password", "/GP/reset_password","/GP/emergency/add","/GP/confirm_reset_code","/GP/settings/logout",
-                                "/GP/settings/confirmCurrentEmail","/GP/settings/verifyCurrentEmail","/GP/settings/sendNewEmailVerification","/GP/settings/confirmNewEmail","/GP/resendVerification","/GP/settings/uploadProfilePicture","GP/resendForgot").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/GP/users", "/GP/users/**","/GP/emergency/list","/GP/settings/email","/GP/settings/profilePicture").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/GP/users","/GP/emergency/update/{contactId}","/GP/settings/changeEmail","/GP/settings/changePassword").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/GP/users/**","/GP/emergency/delete/{contactId}","/GP/settings/confirm_delAcc").permitAll()
-                        .requestMatchers(HttpMethod.PATCH,"/GP/settings/updateInfo").permitAll()
-                        // Default rule for all other endpoints
-                        .anyRequest().authenticated());
-                        // Use HTTP Basic Auth for simplicity (can be customized for JWT)
-                        http.httpBasic(Customizer.withDefaults());
-                        // Disable CSRF for APIs
-                         http.csrf(csrf -> csrf.disable());
-                          return http.build();
-                 }
+        return http.build();
+    }
     @Bean
     public PasswordEncoder passwordEncoder() {
 
@@ -43,7 +75,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOriginPattern("*"); // Debugging purpose, allow all origins
+        configuration.addAllowedOriginPattern("*"); //debugging purpose, allow all origins
 
 //        configuration.addAllowedOrigin("http://192.168.1.9");
 //        configuration.addAllowedOrigin("http://192.168.1.9:8080"); //replace with the mobile app iP and port

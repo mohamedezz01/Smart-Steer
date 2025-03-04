@@ -1,6 +1,7 @@
 package com.example.crud.service;
 
 import com.example.crud.entity.User;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Date;
 import java.util.List;

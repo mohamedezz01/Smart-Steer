@@ -7,6 +7,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -23,10 +24,11 @@ public class JwtUtil {
     }
     private final long DELETE_TOKEN_EXPIRATION = TimeUnit.MINUTES.toMillis(5); // 5 min expiry
     private final SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    public String generateToken(String username, String email) {
+    public String generateToken(String username, String email, List<String> roles) {
         return Jwts.builder()
                 .setSubject(email)  // Store email as the main identifier
                 .claim("username", username)  // Store username in claims
+                .claim("roles", roles)  // Store user roles
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 20 * 24 * 60 * 60 * 1000)) // 20 days
                 .signWith(getSigningKey())
@@ -37,6 +39,9 @@ public class JwtUtil {
     public boolean validateToken(String token, String username) {
         String tokenUsername = extractUsername(token);
         return (username.equals(tokenUsername) && !isTokenExpired(token));
+    }
+    public List<String> extractRoles(String token) {
+        return extractClaim(token, claims -> claims.get("roles", List.class));
     }
 
     public String extractUsername(String token) {

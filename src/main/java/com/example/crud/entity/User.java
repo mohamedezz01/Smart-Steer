@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -50,7 +51,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
-
     @Column(name = "reset_token")
     private String resetToken;
 
@@ -62,22 +62,25 @@ public class User {
 
     @Column(name = "updated_at")
     private Date updatedAt;
+
     @Column(name = "deletion_token")
     private String deletionToken;
 
     @Column(name = "deletion_token_expiry")
     private Date deletionTokenExpiry;
 
-
     @Lob
-    @Column(columnDefinition = "LONGBLOB") // Adjust based on DB
+    @Column(columnDefinition = "LONGBLOB")
     private byte[] profilePicture;
+
+    @Column(name = "roles")
+    private String roles;
 
 
     public User() {
     }
 
-    public User(int id, String firstName, String lastName, String email, String password, String username, String phone, Date dob, boolean isEmailVerified, String verificationCode, Gender gender, String resetToken, Date resetTokenExpiry) {
+    public User(int id, String firstName, String lastName, String email, String password, String username, String phone, Date dob, boolean isEmailVerified, String verificationCode, Gender gender, String resetToken, Date resetTokenExpiry,String roles) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -91,6 +94,7 @@ public class User {
         this.gender = gender;
         this.resetToken = resetToken;
         this.resetTokenExpiry = resetTokenExpiry;
+        this.roles=roles;
     }
 
     public Date getUpdatedAt() {
@@ -141,7 +145,6 @@ public class User {
     this.verificationCode = verificationCode;
     }
 
-
     public boolean isEmailVerified() {
     return isEmailVerified;
     }
@@ -154,7 +157,6 @@ public class User {
     return phone;
     }
 
-
     public void setPhone(String phone) {
     this.phone = phone;
     }
@@ -162,7 +164,6 @@ public class User {
     public Date getDob() {
     return dob;
     }
-
 
     public void setDob(Date dob) {
     this.dob = dob;
@@ -240,6 +241,14 @@ public class User {
     }
     public enum Gender {
         MALE, FEMALE
+    }
+
+    public String getRoles() {
+        return roles;
+    }
+
+    public void setRoles(String roles) {
+        this.roles = roles;
     }
 
     @Override

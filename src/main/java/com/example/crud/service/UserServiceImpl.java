@@ -10,10 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -26,12 +28,14 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
+
     @Autowired
     public UserServiceImpl(UserRepository theUserRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, EmailService emailService) { // Updated constructor name
         this.userRepository = theUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.jwtUtil = jwtUtil;
+
     }
 
     public void signUpUser(User user) throws MessagingException {
@@ -119,14 +123,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public String updateUserFields(int userId, String firstName, String lastName, String phone, Date dob) {
         User user = findById(userId);
-
+        List<String> roles = Arrays.asList(user.getRoles().split(","));
         if (firstName != null) user.setFirstName(firstName);
         if (lastName != null) user.setLastName(lastName);
         if (phone != null) user.setPhone(phone);
         if (dob != null) user.setDob(dob);
         save(user);
 
-        return jwtUtil.generateToken(user.getEmail(),user.getUsername());
+        return jwtUtil.generateToken(user.getEmail(),user.getUsername(),roles);
     }
 
 

@@ -1,11 +1,8 @@
 package com.example.crud.controllers;
 
-import com.example.crud.dto.ChangeEmailRequest;
 import com.example.crud.dto.ChangePasswordRequest;
 import com.example.crud.dto.DeleteAccountRequest;
-import com.example.crud.entity.EmergencyContact;
 import com.example.crud.entity.User;
-import com.example.crud.service.AuthorityService;
 import com.example.crud.service.EmailService;
 import com.example.crud.service.TokenBlacklistService;
 import com.example.crud.service.UserService;
@@ -29,16 +26,13 @@ import java.util.*;
 public class SettingsRestController {
 
     private UserService userService;
-    private AuthorityService authorityService;
     private EmailService emailService;
     private VerificationUtil verficationUtil;
     private JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private TokenBlacklistService tokenBlacklistService;
-
-    public SettingsRestController(UserService theUserService, AuthorityService authorityService, EmailService emailService, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
+    public SettingsRestController(UserService theUserService, EmailService emailService, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
         this.userService = theUserService;
-        this.authorityService = authorityService;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil=jwtUtil;
@@ -51,7 +45,7 @@ public class SettingsRestController {
         Map<String, Object> response = new HashMap<>();
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", "Authorization header missing or invalid");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -61,7 +55,7 @@ public class SettingsRestController {
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", "User not found");
             response.put("status", HttpStatus.NOT_FOUND.value());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
@@ -75,7 +69,7 @@ public class SettingsRestController {
         String body = "Your verification code: " + verificationCode;
         emailService.sendVerificationEmail(email, user.getFirstName(), subject, body);
 
-        response.put("message", "Verification code sent to current email.");
+        response.put("message", "Verification code sent to current email");
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
@@ -87,12 +81,12 @@ public class SettingsRestController {
         String verificationCode = requestBody.get("verificationCode");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", "Authorization header missing or invalid");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
         if (verificationCode == null || verificationCode.isEmpty()) {
-            response.put("message", "Verification code is required.");
+            response.put("message", "Verification code is required");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
@@ -102,7 +96,7 @@ public class SettingsRestController {
         User user = userService.findByEmail(email);
 
         if (user == null || !verificationCode.equals(user.getVerificationCode())) {
-            response.put("message", "Invalid verification code.");
+            response.put("message", "Invalid verification code");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
@@ -121,7 +115,7 @@ public class SettingsRestController {
         Map<String, Object> response = new HashMap<>();
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", "Authorization header missing or invalid");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -131,16 +125,19 @@ public class SettingsRestController {
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", "User not found");
             response.put("status", HttpStatus.NOT_FOUND.value());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
         String newEmail = requestBody.get("newEmail");
         if (newEmail == null || newEmail.isEmpty() || newEmail.equals(email)) {
-            response.put("message", "Invalid or duplicate email provided.");
+            response.put("message", "Invalid or duplicate email provided");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+        user.setRoles("ROLE_USER");
+        List<String> roles = Arrays.asList(user.getRoles().split(","));
+
         try {
             String verificationCode = VerificationUtil.generateVerificationCode();
             user.setVerificationCode(verificationCode);
@@ -148,7 +145,7 @@ public class SettingsRestController {
             user.setEmail(newEmail);
             userService.save(user);
 
-            String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail());
+            String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(),roles);
             response.put("New Token", newToken);
 
             String subject = "Confirm Your New Email";
@@ -156,7 +153,7 @@ public class SettingsRestController {
             emailService.sendVerificationEmail(newEmail, user.getFirstName(), subject, body);
 
 
-            response.put("message", "Verification code sent to new email.");
+            response.put("message", "Verification code sent to new email");
             response.put("status", HttpStatus.OK.value());
             return ResponseEntity.ok(response);
 
@@ -180,7 +177,7 @@ public class SettingsRestController {
         Map<String, Object> response = new HashMap<>();
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", "Authorization header missing or invalid");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -190,7 +187,7 @@ public class SettingsRestController {
         User user = userService.findByEmail(email);  //find user by extracted email
 
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", "User not found");
             response.put("status", HttpStatus.NOT_FOUND.value());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
@@ -198,19 +195,21 @@ public class SettingsRestController {
         String verificationCode = requestBody.get("verificationCode");
 
         if (verificationCode == null || verificationCode.isEmpty() || !verificationCode.equals(user.getVerificationCode())) {
-            response.put("message", "Invalid verification code.");
+            response.put("message", "Invalid verification code");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+        user.setRoles("ROLE_USER");
+        List<String> roles = Arrays.asList(user.getRoles().split(","));
 
         user.setEmailVerified(true);
         user.setVerificationCode(null);
         userService.save(user);
 
-        String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail());
+        String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(),roles);
 
         response.put("New Token", newToken);
-        response.put("message", "New email verified and updated successfully.");
+        response.put("message", "New email verified and updated successfully");
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
@@ -221,7 +220,7 @@ public class SettingsRestController {
 
         // Validate the Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", "Authorization header missing or invalid");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -232,7 +231,7 @@ public class SettingsRestController {
 
         User user = userService.findByEmail(email);
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", "User not found");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -248,20 +247,20 @@ public class SettingsRestController {
         Map<String, Object> response = new HashMap<>();
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", "Authorization header missing or invalid");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
         if (request.getOldPassword().equals(request.getNewPassword())) {
-            response.put("message", "Old password can't be the same as the new password.");
+            response.put("message", "Old password can't be the same as the new password");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
         String passwordPattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
         if (!request.getNewPassword().matches(passwordPattern)) {
-            response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character.");
+            response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
@@ -271,22 +270,23 @@ public class SettingsRestController {
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", "User not found");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
         if (!userService.isPasswordValid(user, request.getOldPassword())) {
-            response.put("message", "Old password is incorrect.");
+            response.put("message", "Old password is incorrect");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
         userService.changePassword(user, request.getOldPassword(), request.getNewPassword());
+        user.setRoles("ROLE_USER");
+        List<String> roles = Arrays.asList(user.getRoles().split(","));
+        String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(),roles);
 
-        String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail());
-
-        response.put("message", "Password changed successfully.");
+        response.put("message", "Password changed successfully");
         response.put("New Token", newToken);
 
         String subject = "Password Changed Successfully";
@@ -297,18 +297,19 @@ public class SettingsRestController {
     }
 
     @PostMapping("/verify_delAcc")
-    public ResponseEntity<Map<String, Object>> verifyDeleteAccount(@RequestBody DeleteAccountRequest request) {
+    public ResponseEntity<Map<String, Object>> verifyDeleteAccount(@RequestBody DeleteAccountRequest request,
+                                                                   @RequestHeader("Authorization") String authHeader) {
         Map<String, Object> response = new HashMap<>();
         User user = userService.findByEmail(request.getEmail());
 
         if (user == null) {
-            response.put("message", "Invalid email.");
+            response.put("message", "Invalid email");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            response.put("message", "Invalid password.");
+            response.put("message", "Invalid password");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
@@ -347,7 +348,7 @@ public class SettingsRestController {
 
         //validate the Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", "Authorization header missing or invalid");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -358,7 +359,7 @@ public class SettingsRestController {
         //blacklist the token
         tokenBlacklistService.blacklistToken(token);
 
-        response.put("message", "Logged out successfully.");
+        response.put("message", "Logged out successfully");
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
@@ -370,13 +371,13 @@ public class SettingsRestController {
         Map<String, Object> response = new HashMap<>();
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", "Authorization header missing or invalid");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
         //2MB max
         if (file.getSize() > 2 * 1024 * 1024) {
-            response.put("message", "Image size must be less than 2MB.");
+            response.put("message", "Image size must be less than 2MB");
             return ResponseEntity.badRequest().body(response);
         }
 
@@ -385,16 +386,16 @@ public class SettingsRestController {
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", "User not found");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
         try {
             user.setProfilePicture(file.getBytes());
             userService.save(user);
-            response.put("message", "Profile picture uploaded successfully.");
+            response.put("message", "Profile picture uploaded successfully");
             return ResponseEntity.ok(response);
         } catch (IOException e) {
-            response.put("message", "Failed to process image.");
+            response.put("message", "Failed to process image");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
@@ -414,6 +415,4 @@ public class SettingsRestController {
                 .contentType(MediaType.IMAGE_JPEG)
                 .body(user.getProfilePicture());
     }
-
-
 }
