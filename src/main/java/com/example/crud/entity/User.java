@@ -70,14 +70,16 @@ public class User {
 
 
     @Lob
-    @Column(columnDefinition = "LONGBLOB") // Adjust based on DB
+    @Column(columnDefinition = "LONGBLOB")
     private byte[] profilePicture;
 
+    @Column(name = "roles")
+    private String roles;
 
     public User() {
     }
 
-    public User(int id, String firstName, String lastName, String email, String password, String username, String phone, Date dob, boolean isEmailVerified, String verificationCode, Gender gender, String resetToken, Date resetTokenExpiry) {
+    public User(int id, String firstName, String lastName, String email, String password, String username, String phone, Date dob, boolean isEmailVerified, String verificationCode, Gender gender, String resetToken, Date resetTokenExpiry, String roles) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -91,6 +93,7 @@ public class User {
         this.gender = gender;
         this.resetToken = resetToken;
         this.resetTokenExpiry = resetTokenExpiry;
+        this.roles=roles;
     }
 
     public Date getUpdatedAt() {
@@ -240,6 +243,14 @@ public class User {
     }
     public enum Gender {
         MALE, FEMALE
+    }
+
+    public String getRoles() {
+        return roles;
+    }
+
+    public void setRoles(String roles) {
+        this.roles = roles;
     }
 
     @Override

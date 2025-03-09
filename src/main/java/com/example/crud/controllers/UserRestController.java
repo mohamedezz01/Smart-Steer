@@ -1,9 +1,9 @@
 package com.example.crud.controllers;
 
-import com.example.crud.entity.Authority;
 import com.example.crud.dto.ResetPasswordRequest;
+import com.example.crud.dto.UserDTO;
+import com.example.crud.entity.EmergencyContact;
 import com.example.crud.entity.User;
-import com.example.crud.service.AuthorityService;
 import com.example.crud.service.EmailService;
 import com.example.crud.service.UserService;
 import com.example.crud.util.JwtUtil;
@@ -22,7 +22,6 @@ import java.util.*;
 public class UserRestController {
 
     private UserService userService;
-    private AuthorityService authorityService;
     private EmailService emailService;
     private VerificationUtil verficationUtil;
     private JwtUtil jwtUtil;
@@ -30,9 +29,8 @@ public class UserRestController {
     private MessageSource messageSource;
 
 
-    public UserRestController(UserService theUserService, AuthorityService authorityService, EmailService emailService, PasswordEncoder passwordEncoder,JwtUtil jwtUtil,MessageSource messageSource) {
+    public UserRestController(UserService theUserService, EmailService emailService, PasswordEncoder passwordEncoder,JwtUtil jwtUtil,MessageSource messageSource) {
         this.userService = theUserService;
-        this.authorityService = authorityService;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil=jwtUtil;
@@ -105,15 +103,16 @@ public class UserRestController {
         user.setEmailVerified(true);
         user.setVerificationCode(null);
 
-        Authority auth = new Authority();
-        auth.setUserId(user.getUsername());
-        auth.setAuthority("ROLE_USER");
-        authorityService.save(auth);
+        user.setRoles("ROLE_USER");
 
-        String token = jwtUtil.generateToken(user.getUsername(), user.getEmail());
+        userService.save(user);
+
+        List<String> roles = Arrays.asList(user.getRoles().split(","));
+        String token = jwtUtil.generateToken(user.getUsername(), user.getEmail(), roles);
 
         response.put("message", "Email verified successfully!");
         response.put("token", token);
+        response.put("roles", roles);
         return ResponseEntity.ok(response);
     }
      //Login endpoint
@@ -148,11 +147,12 @@ public class UserRestController {
              return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
          }
 
-         String token = jwtUtil.generateToken(user.getUsername(), user.getEmail());
+         List<String> roles = Arrays.asList(user.getRoles().split(","));
+         String token = jwtUtil.generateToken(user.getUsername(), user.getEmail(), roles);
 
          response.put("message", messageSource.getMessage("login.success", null, locale));
          response.put("token", token);
-
+         response.put("roles", roles);
          return ResponseEntity.ok(response);
      }
 
@@ -300,33 +300,57 @@ public class UserRestController {
         return ResponseEntity.ok(response);
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////
-    //get all users
-    @GetMapping("/users")
-    public List<User>findAll(){
-        return userService.findAll();
-    }
+    /////////////////////////////////////ADMIN/////////////////////////////////////
 
-    //get one user
-    @GetMapping("/users/{userId}")
-    public User getUser(@PathVariable int userId){
-        User theUser=userService.findById(userId);
+    @GetMapping("/admin/users")
+    public ResponseEntity<Map<String, Object>> listUsers(@RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
 
-        if(theUser==null){
-            throw new RuntimeException("id not found "+theUser);
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.put("message", "Only admins are allowed to access and delete users");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
-        return theUser;
-    }
 
-    //delete user
-    @DeleteMapping("/users/{Id}")
-    public String delUser(@PathVariable int Id){
+        List<UserDTO> users = userService.findAllUsersWithSpecificData();
 
-        User tempUser =userService.findById(Id);
-        if(tempUser==null){
-            throw new RuntimeException("user not found");
+        if (users.isEmpty()) {
+            response.put("message", "No users found.");
+            response.put("users", Collections.emptyList());
+            response.put("status", HttpStatus.OK.value());
+            return ResponseEntity.ok(response);
         }
-        userService.deleteById(Id);
-        return "deleted user with id of "+Id;
+
+        response.put("message", "Users retrieved successfully.");
+        response.put("users", users);
+        response.put("status", HttpStatus.OK.value());
+        return ResponseEntity.ok(response);
+    }
+    @DeleteMapping("admin/users/{userId}")
+    public ResponseEntity<Map<String, Object>> deleteUser(
+            @PathVariable int userId, @RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.put("message", "Only admin are allowed to access and delete users");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtil.extractEmail(token);
+
+        User user = userService.findByEmail(email);
+        if (user == null) {
+            response.put("message", "User not found.");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        userService.deleteAccount(user);;
+
+        response.put("message", "Deleted successfully");
+        response.put("status", HttpStatus.OK.value());
+        return ResponseEntity.ok(response);
+
     }
 }

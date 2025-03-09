@@ -94,7 +94,7 @@ public class EmergencyContactController {
             response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-        System.out.println("User Retrieved: " + user);
+
         List<EmergencyContact> contacts = emergencyContactService.getContactsByUserId(user.getId());
 
         if (contacts.isEmpty()) {

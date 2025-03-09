@@ -1,5 +1,6 @@
 package com.example.crud.service;
 
+import com.example.crud.dto.UserDTO;
 import com.example.crud.entity.User;
 
 import java.util.Date;
@@ -20,4 +21,5 @@ public interface UserService {
     public boolean isPasswordValid(User user, String password);
     public void saveDeletionToken(User user, String deletionToken);
     public boolean isDeletionTokenValid(User user, String deletionToken);
+    public List<UserDTO> findAllUsersWithSpecificData();
 }

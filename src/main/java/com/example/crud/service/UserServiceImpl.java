@@ -1,6 +1,7 @@
 package com.example.crud.service;
 
 import com.example.crud.dao.UserRepository;
+import com.example.crud.dto.UserDTO;
 import com.example.crud.entity.User;
 import com.example.crud.util.JwtUtil;
 import com.example.crud.util.VerificationUtil;
@@ -10,10 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -52,18 +55,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean isPasswordValid(User user, String password) {
-        return passwordEncoder.matches(password, user.getPassword()); // ✅ This is correct
+        return passwordEncoder.matches(password, user.getPassword());
     }
 
     @Override
     public boolean changePassword(User user, String oldPassword, String newPassword) {
-        // No need to revalidate the old password (already checked in the controller)
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         return true;
     }
-
-
 
     @Override
     public void deleteById(int Id) {
@@ -91,6 +91,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> findAll() {
         return userRepository.findAll();
+    }
+    @Override
+    public List<UserDTO> findAllUsersWithSpecificData() {
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(user -> new UserDTO(
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getProfilePicture()
+                ))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -125,11 +136,11 @@ public class UserServiceImpl implements UserService {
         if (phone != null) user.setPhone(phone);
         if (dob != null) user.setDob(dob);
         save(user);
-
-        return jwtUtil.generateToken(user.getEmail(),user.getUsername());
+        List<String> roles = Arrays.stream(user.getRoles().split(","))
+                .map(role -> "ROLE_" + role.trim())
+                .collect(Collectors.toList());
+        return jwtUtil.generateToken(user.getUsername(), user.getEmail(), roles);
     }
-
-
 
     @Override
     public void deleteAccount(User user) {

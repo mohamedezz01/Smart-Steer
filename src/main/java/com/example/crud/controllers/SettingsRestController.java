@@ -1,11 +1,8 @@
 package com.example.crud.controllers;
 
-import com.example.crud.dto.ChangeEmailRequest;
 import com.example.crud.dto.ChangePasswordRequest;
 import com.example.crud.dto.DeleteAccountRequest;
-import com.example.crud.entity.EmergencyContact;
 import com.example.crud.entity.User;
-import com.example.crud.service.AuthorityService;
 import com.example.crud.service.EmailService;
 import com.example.crud.service.TokenBlacklistService;
 import com.example.crud.service.UserService;
@@ -29,16 +26,14 @@ import java.util.*;
 public class SettingsRestController {
 
     private UserService userService;
-    private AuthorityService authorityService;
     private EmailService emailService;
     private VerificationUtil verficationUtil;
     private JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private TokenBlacklistService tokenBlacklistService;
 
-    public SettingsRestController(UserService theUserService, AuthorityService authorityService, EmailService emailService, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
+    public SettingsRestController(UserService theUserService,  EmailService emailService, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
         this.userService = theUserService;
-        this.authorityService = authorityService;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil=jwtUtil;
@@ -147,8 +142,9 @@ public class SettingsRestController {
             user.setEmailVerified(false);
             user.setEmail(newEmail);
             userService.save(user);
+            List<String> roles = Arrays.asList(user.getRoles().split(","));
 
-            String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail());
+            String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(),roles);
             response.put("New Token", newToken);
 
             String subject = "Confirm Your New Email";
@@ -207,7 +203,9 @@ public class SettingsRestController {
         user.setVerificationCode(null);
         userService.save(user);
 
-        String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail());
+        List<String> roles = Arrays.asList(user.getRoles().split(","));
+
+        String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(),roles);
 
         response.put("New Token", newToken);
         response.put("message", "New email verified and updated successfully.");
@@ -284,7 +282,9 @@ public class SettingsRestController {
 
         userService.changePassword(user, request.getOldPassword(), request.getNewPassword());
 
-        String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail());
+        List<String> roles = Arrays.asList(user.getRoles().split(","));
+
+        String newToken = jwtUtil.generateToken(user.getUsername(), user.getEmail(),roles);
 
         response.put("message", "Password changed successfully.");
         response.put("New Token", newToken);
