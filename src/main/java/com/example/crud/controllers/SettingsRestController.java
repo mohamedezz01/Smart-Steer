@@ -432,32 +432,25 @@ public class SettingsRestController {
         Map<String, Object> response = new HashMap<>();
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", "Authorization header missing or invalid");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
-        String token = authHeader.substring(7);
+       String token = authHeader.substring(7);
         String email = jwtUtil.extractEmail(token);
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", "User not found");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
         if (serialNumberRequest.getSerialNumber() == null || serialNumberRequest.getSerialNumber().isEmpty()) {
-            response.put("message", "The 'serialNumber' field is required.");
+            response.put("message", "Please enter a valid serial number");
             return ResponseEntity.badRequest().body(response);
         }
 
-        try {
-            String result = serialNumberService.assignSerialNumber(serialNumberRequest.getSerialNumber(), user);
-            response.put("message", result);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("message", "Error assigning serial number: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+        return serialNumberService.assignSerialNumber(serialNumberRequest.getSerialNumber(), user);
     }
 
 }
