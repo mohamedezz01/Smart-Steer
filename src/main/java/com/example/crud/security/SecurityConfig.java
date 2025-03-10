@@ -44,28 +44,29 @@ public class SecurityConfig {
                                         "/GP/settings/verifyCurrentEmail",
                                         "/GP/settings/sendNewEmailVerification",
                                         "/GP/settings/confirmNewEmail",
+                                        "/GP/settings/serialNumber",
                                         "/GP/resendVerification",
                                         "/GP/settings/uploadProfilePicture",
                                         "/GP/resendForgot"
-                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN")
+                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN","ROLE_OWNER")
                                 .requestMatchers(HttpMethod.GET,
                                         "/GP/users",
                                         "/GP/users/**",
                                         "/GP/emergency/list",
                                         "/GP/settings/email",
                                         "/GP/settings/profilePicture"
-                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN")
+                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN","ROLE_OWNER")
                                 .requestMatchers(HttpMethod.PUT,
                                         "/GP/users/**",
                                         "/GP/emergency/update/{contactId}",
                                         "/GP/settings/changeEmail",
                                         "/GP/settings/changePassword"
-                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN")
+                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN","ROLE_OWNER")
                                 .requestMatchers(HttpMethod.DELETE,
                                         "/GP/users/**",
                                         "/GP/emergency/delete/{contactId}",
                                         "/GP/settings/confirm_delAcc"
-                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN")
+                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN","ROLE_OWNER")
                                 .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())

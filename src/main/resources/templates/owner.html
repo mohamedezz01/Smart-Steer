@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Smart Steer - Car Ownership Confirmation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      margin: 0 auto;
+      max-width: 600px;
+      padding: 20px;
+      background-color: #feedff;
+      border: 1px solid #a3a3a3;
+    }
+    .ownership-message {
+      font-size: 18px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Congratulations! Car Ownership Confirmation</h1>
+  <h3>Dear [[${firstName}]] [[${lastName}]],</h3>
+  <p class="ownership-message">
+    We are thrilled to inform you that you are now the proud owner of your new car!
+  </p>
+  <p>
+    Thank you for choosing Smart Steer. We are dedicated to providing you with the best possible driving experience.
+  </p>
+
+  <img src="https://i.imgur.com/Amln0C4.jpeg" width="450" height="250">
+
+  <p>
+    We hope you enjoy your new vehicle. If you have any questions or require assistance, please don't hesitate to contact us.
+  </p>
+
+  <p>Kind regards,</p>
+  <p>Smart Steer</p>
+</div>
+</body>
+</html>

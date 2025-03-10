@@ -2,13 +2,17 @@ package com.example.crud.controllers;
 
 import com.example.crud.dto.ChangePasswordRequest;
 import com.example.crud.dto.DeleteAccountRequest;
+import com.example.crud.dto.SerialNumberRequest;
+import com.example.crud.entity.SerialNumber;
 import com.example.crud.entity.User;
 import com.example.crud.service.EmailService;
+import com.example.crud.service.SerialNumberService;
 import com.example.crud.service.TokenBlacklistService;
 import com.example.crud.service.UserService;
 import com.example.crud.util.JwtUtil;
 import com.example.crud.util.VerificationUtil;
 import jakarta.mail.MessagingException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,13 +35,18 @@ public class SettingsRestController {
     private JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private TokenBlacklistService tokenBlacklistService;
+    @Autowired
+    private SerialNumberService serialNumberService;
 
-    public SettingsRestController(UserService theUserService,  EmailService emailService, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
+
+    public SettingsRestController(UserService theUserService,  EmailService emailService, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService,SerialNumberService serialNumberService) {
         this.userService = theUserService;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil=jwtUtil;
         this.tokenBlacklistService = tokenBlacklistService;
+        this.serialNumberService=serialNumberService;
+
     }
 
 
@@ -415,5 +424,40 @@ public class SettingsRestController {
                 .body(user.getProfilePicture());
     }
 
+    @PostMapping("/serialNumber")
+    public ResponseEntity<Map<String, Object>> assignSerialNumber(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody SerialNumberRequest serialNumberRequest) throws MessagingException {
+
+        Map<String, Object> response = new HashMap<>();
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.put("message", "Authorization header missing or invalid.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        String token = authHeader.substring(7);
+        String email = jwtUtil.extractEmail(token);
+        User user = userService.findByEmail(email);
+
+        if (user == null) {
+            response.put("message", "User not found.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        if (serialNumberRequest.getSerialNumber() == null || serialNumberRequest.getSerialNumber().isEmpty()) {
+            response.put("message", "The 'serialNumber' field is required.");
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        try {
+            String result = serialNumberService.assignSerialNumber(serialNumberRequest.getSerialNumber(), user);
+            response.put("message", result);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", "Error assigning serial number: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 
 }

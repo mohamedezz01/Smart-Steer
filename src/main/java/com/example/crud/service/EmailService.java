@@ -88,6 +88,27 @@ public class EmailService implements EmailServ {
     }
 
     @Override
+    public void ownerEmail(String to, String firstName,String lastName, String subject) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        // email recipient, subject, and sender
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setFrom("SmartSteer@outlook.com");
+
+        // for thymeleaf template
+        Context context = new Context();
+        context.setVariable("firstName", firstName);
+        context.setVariable("lastName", lastName);
+        // Render email template with thymeleaf
+        String htmlContent = templateEngine.process("owner", context);
+        helper.setText(htmlContent, true); // 'true' enables HTML content
+
+        mailSender.send(message);
+    }
+
+    @Override
     public void accountDeletedEmail(String to, String firstName, String subject, String body) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -106,5 +127,7 @@ public class EmailService implements EmailServ {
 
         mailSender.send(message);
     }
+
+
 }
 
