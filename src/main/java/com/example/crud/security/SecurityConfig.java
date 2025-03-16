@@ -1,4 +1,5 @@
 package com.example.crud.security;
+
 import com.example.crud.dto.JwtRequestFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -22,7 +23,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+        http
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(configurer ->
                         configurer
                                 .requestMatchers(HttpMethod.POST,
@@ -34,8 +36,10 @@ public class SecurityConfig {
                                         "/GP/confirm_reset_code",
                                         "/GP/resendForgot"
                                 ).permitAll()
+
                                 .requestMatchers(HttpMethod.GET, "/GP/admin/users").hasAuthority("ROLE_ADMIN")
                                 .requestMatchers(HttpMethod.DELETE, "/GP/admin/users/{Id}").hasAuthority("ROLE_ADMIN")
+
                                 .requestMatchers(HttpMethod.POST,
                                         "/GP/emergency/add",
                                         "/GP/settings/logout",
@@ -48,25 +52,45 @@ public class SecurityConfig {
                                         "/GP/resendVerification",
                                         "/GP/settings/uploadProfilePicture",
                                         "/GP/resendForgot"
-                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN","ROLE_OWNER")
+                                ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+
+                                .requestMatchers(HttpMethod.POST,
+                                        "/GP/emergency/add"
+                                ).hasAnyAuthority("ROLE_ADMIN", "ROLE_OWNER")
+
                                 .requestMatchers(HttpMethod.GET,
                                         "/GP/users",
                                         "/GP/users/**",
                                         "/GP/emergency/list",
                                         "/GP/settings/email",
                                         "/GP/settings/profilePicture"
-                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN","ROLE_OWNER")
+                                ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+
                                 .requestMatchers(HttpMethod.PUT,
                                         "/GP/users/**",
-                                        "/GP/emergency/update/{contactId}",
                                         "/GP/settings/changeEmail",
                                         "/GP/settings/changePassword"
-                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN","ROLE_OWNER")
+                                ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+
+                                .requestMatchers(HttpMethod.PUT,
+                                        "/GP/emergency/update/{contactId}"
+                                ).hasAnyAuthority("ROLE_ADMIN", "ROLE_OWNER")
+
                                 .requestMatchers(HttpMethod.DELETE,
                                         "/GP/users/**",
                                         "/GP/emergency/delete/{contactId}",
                                         "/GP/settings/confirm_delAcc"
-                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN","ROLE_OWNER")
+                                ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+
+                                .requestMatchers(HttpMethod.POST, "/GP/tech/posts").hasAnyAuthority("ROLE_ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/GP/tech/posts").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                                .requestMatchers(HttpMethod.GET, "/GP/tech/posts/{id}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                                .requestMatchers(HttpMethod.DELETE, "/GP/tech/posts/{id}").hasAnyAuthority("ROLE_ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/GP/tech/likes").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                                .requestMatchers(HttpMethod.DELETE, "/GP/tech/likes/{postId}/{userId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                                .requestMatchers(HttpMethod.POST, "/GP/tech/comments").hasAnyAuthority("ROLE_ADMIN", "ROLE_OWNER")
+                                .requestMatchers(HttpMethod.GET, "/GP/tech/comments/post/{postId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                                .requestMatchers(HttpMethod.DELETE, "/GP/tech/comments/{id}").hasAnyAuthority("ROLE_ADMIN", "ROLE_OWNER")
                                 .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())
@@ -74,11 +98,12 @@ public class SecurityConfig {
 
         return http.build();
     }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
-
         return new BCryptPasswordEncoder();
     }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -90,5 +115,4 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
 }

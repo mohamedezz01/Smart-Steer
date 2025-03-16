@@ -10,10 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/GP/emergency")
@@ -61,7 +58,11 @@ public class EmergencyContactController {
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-
+         if(Objects.equals(contact.getPhone(), user.getPhone())){
+            response.put("message", "You can't use your profile number as a new contact. Please enter a different one");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
         //set user association and save contact
         contact.setUser(user);
         EmergencyContact savedContact = emergencyContactService.addContact(contact);
