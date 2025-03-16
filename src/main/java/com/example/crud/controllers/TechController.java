@@ -143,19 +143,17 @@ public class TechController {
             }
         }
 
-        // Delete the post from the database
         postService.deletePost(id);
 
         return ResponseEntity.ok("Post deleted successfully");
     }
     private void deleteImageFromGitHub(String imageUrl) throws IOException {
-        // Extract file path from URL
+
         String baseUrl = "https://raw.githubusercontent.com/mohamedezz01/Smart-Steer/ImageStore/";
         String filePath = imageUrl.replace(baseUrl, "");
 
         System.out.println("File Path: " + filePath);
 
-        // Include branch reference in API URL
         String apiUrl = "https://api.github.com/repos/mohamedezz01/Smart-Steer/contents/" + filePath + "?ref=ImageStore";
         System.out.println("API URL: " + apiUrl);
 
