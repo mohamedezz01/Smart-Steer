@@ -5,6 +5,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,14 +15,40 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+@Service
 public class GitHubService {
 
     public String uploadImageToGitHub(MultipartFile file) throws IOException {
-        String repoOwner = "myusername";
-        String repoName = "my-app-images";
-        String branch = "main";
-        String filePath = "images/" + file.getOriginalFilename();
-        String githubToken = "YOUR_GITHUB_TOKEN";
+        String repoOwner = "mohamedezz01";
+        String repoName = "Smart-Steer";
+        String branch = "ImageStore";
+        String githubToken = "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";
+
+        String filePath = "images/" +file.getOriginalFilename();
+
+        // Debugging: Print the file path
+        System.out.println("File Path: " + filePath);
+
+        String apiUrl = "https://api.github.com/repos/" + repoOwner + "/" + repoName + "/contents/" + filePath + "?ref=" + branch;
+        // Debugging: Print the API URL
+        System.out.println("API URL: " + apiUrl);
+
+        // Fetch the file details to get the SHA (if the file exists)
+        String sha = null;
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "token " + githubToken);
+            headers.set("Accept", "application/vnd.github.v3+json");
+
+            ResponseEntity<Map> getResponse = restTemplate.exchange(apiUrl, HttpMethod.GET, new HttpEntity<>(headers), Map.class);
+            if (getResponse.getStatusCode() == HttpStatus.OK) {
+                sha = (String) getResponse.getBody().get("sha");
+                System.out.println("File SHA: " + sha);
+            }
+        } catch (HttpClientErrorException.NotFound e) {
+            System.out.println("File does not exist: " + filePath);
+        }
 
         // Encode the file content as Base64
         String fileContent = Base64.getEncoder().encodeToString(file.getBytes());
@@ -31,6 +59,11 @@ public class GitHubService {
         requestBody.put("content", fileContent);
         requestBody.put("branch", branch);
 
+        // Include the SHA if the file already exists (to update it)
+        if (sha != null) {
+            requestBody.put("sha", sha);
+        }
+
         // Send the request to GitHub API
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -38,15 +71,25 @@ public class GitHubService {
         headers.set("Accept", "application/vnd.github.v3+json");
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
-        String apiUrl = "https://api.github.com/repos/" + repoOwner + "/" + repoName + "/contents/" + filePath;
 
-        ResponseEntity<Map> response = restTemplate.exchange(apiUrl, HttpMethod.PUT, request, Map.class);
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(apiUrl, HttpMethod.PUT, request, Map.class);
 
-        if (response.getStatusCode() == HttpStatus.CREATED) {
-            // Return the direct link to the file
-            return "https://raw.githubusercontent.com/" + repoOwner + "/" + repoName + "/" + branch + "/" + filePath;
-        } else {
-            throw new IOException("Failed to upload image to GitHub");
+            // Debugging: Print the response status and body
+            System.out.println("Response Status: " + response.getStatusCode());
+            System.out.println("Response Body: " + response.getBody());
+
+            if (response.getStatusCode() == HttpStatus.CREATED || response.getStatusCode() == HttpStatus.OK) {
+                // Return the direct link to the file
+                return "https://raw.githubusercontent.com/" + repoOwner + "/" + repoName + "/" + branch + "/" + filePath;
+            } else {
+                throw new IOException("Failed to upload image to GitHub");
+            }
+        } catch (HttpClientErrorException e) {
+            // Debugging: Print the error response
+            System.out.println("Error Response: " + e.getResponseBodyAsString());
+            throw new IOException("Failed to upload image to GitHub: " + e.getMessage(), e);
         }
     }
+
 }

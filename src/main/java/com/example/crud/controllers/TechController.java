@@ -9,10 +9,11 @@ import com.example.crud.service.*;
 import com.example.crud.util.JwtUtil;
 import com.example.crud.util.VerificationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -29,6 +30,8 @@ public class TechController {
     private LikeService likeService;
     @Autowired
     private CommentService commentService;
+    @Autowired
+    private GitHubService gitHubService;
 
     private UserService userService;
     private EmailService emailService;
@@ -59,11 +62,12 @@ public class TechController {
         Posts post = new Posts();
         post.setContent(content);
 
+        String imageUrl = null;
         if (file != null && !file.isEmpty()) {
-            post.setImage(file.getBytes());
+            imageUrl = gitHubService.uploadImageToGitHub(file);
         }
 
-
+        post.setImageUrl(imageUrl);
         post.setAdmin(user);
         Posts savedPost = postService.createPost(post);
 
@@ -72,32 +76,31 @@ public class TechController {
         response.put("postId", savedPost.getId());
         response.put("content", savedPost.getContent());
         response.put("createdAt", savedPost.getCreatedAt());
+        response.put("imageUrl", savedPost.getImageUrl());
 
         return ResponseEntity.ok(response);
     }
 
+
     @GetMapping("/posts")
     public ResponseEntity<?> getAllPosts() {
         List<Posts> posts = postService.getAllPosts();
-        System.out.println("Number of posts fetched: " + posts.size()); //debugging
 
         List<PostResponse> response = new ArrayList<>();
         for (Posts post : posts) {
-            System.out.println("Processing post ID: " + post.getId()); //debugging
 
             PostResponse postResponse = new PostResponse();
             postResponse.setId(post.getId());
             postResponse.setContent(post.getContent());
             postResponse.setCreatedAt(post.getCreatedAt());
 
-            if (post.getImage() != null) {
-                postResponse.setImage(Base64.getEncoder().encodeToString(post.getImage()));
+            if (post.getImageUrl() != null) {
+                postResponse.setImageUrl(post.getImageUrl());
             }
 
             response.add(postResponse);
         }
 
-        System.out.println("Number of posts in response: " + response.size()); // Debugging
         return ResponseEntity.ok(response);
     }
     @GetMapping("/posts/{id}")
@@ -110,23 +113,87 @@ public class TechController {
 
         Posts post = postOptional.get();
 
-        // Construct a custom response
         Map<String, Object> response = new HashMap<>();
         response.put("id", post.getId());
         response.put("content", post.getContent());
         response.put("createdAt", post.getCreatedAt());
 
-        // Optionally include the image (if needed)
-        if (post.getImage() != null) {
-            response.put("image", Base64.getEncoder().encodeToString(post.getImage()));
+        if (post.getImageUrl() != null) {
+            response.put("imageUrl", post.getImageUrl());
         }
 
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/posts/{id}")
-    public void deletePost(@PathVariable int id) {
+    public ResponseEntity<?> deletePost(@PathVariable int id) {
+        Optional<Posts> postOptional = postService.getPostById(id);
+
+        if (postOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Post not found");
+        }
+
+        Posts post = postOptional.get();
+
+        if (post.getImageUrl() != null) {
+            try {
+                deleteImageFromGitHub(post.getImageUrl());
+            } catch (IOException e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete image from GitHub");
+            }
+        }
+
+        // Delete the post from the database
         postService.deletePost(id);
+
+        return ResponseEntity.ok("Post deleted successfully");
+    }
+    private void deleteImageFromGitHub(String imageUrl) throws IOException {
+        // Extract file path from URL
+        String baseUrl = "https://raw.githubusercontent.com/mohamedezz01/Smart-Steer/ImageStore/";
+        String filePath = imageUrl.replace(baseUrl, "");
+
+        System.out.println("File Path: " + filePath);
+
+        // Include branch reference in API URL
+        String apiUrl = "https://api.github.com/repos/mohamedezz01/Smart-Steer/contents/" + filePath + "?ref=ImageStore";
+        System.out.println("API URL: " + apiUrl);
+
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "token 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"); // Fixed token prefix
+        headers.set("Accept", "application/vnd.github.v3+json");
+
+        ResponseEntity<Map> getResponse;
+        try {
+            getResponse = restTemplate.exchange(apiUrl, HttpMethod.GET, new HttpEntity<>(headers), Map.class);
+        } catch (HttpClientErrorException.NotFound e) {
+            System.out.println("File not found: " + filePath);
+            throw new IOException("File not found: " + filePath);
+        }
+
+        if (getResponse.getStatusCode() != HttpStatus.OK) {
+            throw new IOException("Failed to fetch file details from GitHub");
+        }
+
+        String sha = (String) getResponse.getBody().get("sha");
+        System.out.println("File SHA: " + sha);
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("message", "Delete image: " + filePath);
+        requestBody.put("sha", sha);
+        requestBody.put("branch", "ImageStore"); // Include branch in request body
+
+        ResponseEntity<Map> deleteResponse = restTemplate.exchange(
+                apiUrl,
+                HttpMethod.DELETE,
+                new HttpEntity<>(requestBody, headers),
+                Map.class
+        );
+
+        if (deleteResponse.getStatusCode() != HttpStatus.OK) {
+            throw new IOException("Failed to delete image from GitHub");
+        }
     }
 
     /// Likes ///

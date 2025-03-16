@@ -29,10 +29,12 @@ public class Posts {
     private Date createdAt = new Date();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Comments> comments; // Corrected type
+    private List<Comments> comments;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Likes> likes;
+
+    private String imageUrl;
 
     public Posts() {}
 
@@ -90,5 +92,13 @@ public class Posts {
 
     public void setLikes(List<Likes> likes) {
         this.likes = likes;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

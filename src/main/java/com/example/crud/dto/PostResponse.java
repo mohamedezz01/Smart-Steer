@@ -8,6 +8,7 @@ public class PostResponse {
     private String content;
     private Date createdAt;
     private String image;
+    private String imageUrl;
 
     public int getId() {
         return id;
@@ -39,5 +40,12 @@ public class PostResponse {
 
     public void setImage(String image) {
         this.image = image;
+    }
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }
