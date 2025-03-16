@@ -22,12 +22,9 @@ public class GitHubService {
         String repoOwner = "mohamedezz01";
         String repoName = "Smart-Steer";
         String branch = "ImageStore";
-        String githubToken = "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";
+        String githubToken = System.getenv("GITHUB_TOKEN");
 
-        String filePath = "images/" +file.getOriginalFilename();
-
-        // Debugging: Print the file path
-        System.out.println("File Path: " + filePath);
+        String filePath = "images/" + file.getOriginalFilename();
 
         String apiUrl = "https://api.github.com/repos/" + repoOwner + "/" + repoName + "/contents/" + filePath + "?ref=" + branch;
         // Debugging: Print the API URL
