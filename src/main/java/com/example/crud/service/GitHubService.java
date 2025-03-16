@@ -22,7 +22,7 @@ public class GitHubService {
         String repoOwner = "mohamedezz01";
         String repoName = "Smart-Steer";
         String branch = "ImageStore";
-        String githubToken = System.getenv("GITHUB_TOKEN");
+        String githubToken = "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";
 
         String filePath = "images/" +file.getOriginalFilename();
 

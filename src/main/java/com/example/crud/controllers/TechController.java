@@ -161,8 +161,7 @@ public class TechController {
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
-        String githubToken = System.getenv("GITHUB_TOKEN");
-        headers.set("Authorization", "token "+githubToken); // Fixed token prefix
+        headers.set("Authorization", "token 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"); // Fixed token prefix
         headers.set("Accept", "application/vnd.github.v3+json");
 
         ResponseEntity<Map> getResponse;
