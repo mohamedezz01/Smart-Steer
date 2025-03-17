@@ -221,6 +221,17 @@ public class TechController {
     public ResponseEntity<?> addComment(@RequestBody Comments comment) {
         Comments savedComment = commentService.addComment(comment);
 
+        Optional<Posts> postOptional = postService.getPostById(comment.getPost().getId());
+        if (postOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Post not found");
+        }
+
+        // Check if the user exists
+        Optional<User> userOptional = Optional.ofNullable(userService.findById(comment.getUser().getId()));
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found");
+        }
+
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Comment added successfully");
         response.put("commentId", savedComment.getId());
@@ -253,5 +264,21 @@ public class TechController {
     @DeleteMapping("/comments/{id}")
     public void deleteComment(@PathVariable int id) {
         commentService.deleteComment(id);
+    }
+
+    @GetMapping("/username")
+    ResponseEntity<Map<String, Object>> getUsername(@RequestHeader("Authorization") String authHeader){
+        Map<String, Object> response = new HashMap<>();
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.put("message", "Authorization header missing or invalid.");
+            response.put("status", HttpStatus.UNAUTHORIZED.value());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        String token = authHeader.replace("Bearer ", "");
+        String username=jwtUtil.extractUsername(token);
+
+        response.put("username", username);
+        return ResponseEntity.ok(response);
     }
 }

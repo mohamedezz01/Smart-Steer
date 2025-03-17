@@ -90,6 +90,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.DELETE, "/GP/tech/likes/{postId}/{userId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
                                 .requestMatchers(HttpMethod.POST, "/GP/tech/comments").hasAnyAuthority("ROLE_ADMIN", "ROLE_OWNER")
                                 .requestMatchers(HttpMethod.GET, "/GP/tech/comments/post/{postId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                                .requestMatchers(HttpMethod.GET, "/GP/tech/username").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
                                 .requestMatchers(HttpMethod.DELETE, "/GP/tech/comments/{id}").hasAnyAuthority("ROLE_ADMIN", "ROLE_OWNER")
                                 .anyRequest().authenticated()
                 )
