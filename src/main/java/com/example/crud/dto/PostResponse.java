@@ -7,8 +7,10 @@ public class PostResponse {
     private int id;
     private String content;
     private Date createdAt;
-    private String image;
     private String imageUrl;
+    private String userName;
+    private byte[] profilePic;
+    private String profilePictureUrl;
 
     public int getId() {
         return id;
@@ -34,18 +36,34 @@ public class PostResponse {
         this.createdAt = createdAt;
     }
 
-    public String getImage() {
-        return image;
-    }
-
-    public void setImage(String image) {
-        this.image = image;
-    }
     public String getImageUrl() {
         return imageUrl;
     }
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public byte[] getProfilePic() {
+        return profilePic;
+    }
+
+    public void setProfilePic(byte[] profilePic) {
+        this.profilePic = profilePic;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+    public String getProfilePictureUrl() {
+        return profilePictureUrl;
+    }
+
+    public void setProfilePictureUrl(String profilePictureUrl) {
+        this.profilePictureUrl = profilePictureUrl;
     }
 }

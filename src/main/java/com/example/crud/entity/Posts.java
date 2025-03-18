@@ -1,7 +1,6 @@
 package com.example.crud.entity;
 
 import jakarta.persistence.*;
-
 import java.util.Date;
 import java.util.List;
 
@@ -20,13 +19,19 @@ public class Posts {
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Lob
-    @Column(name = "image", columnDefinition = "LONGBLOB")
-    private byte[] image;
+    @Column(name = "userName", nullable = false)
+    private String userName;
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at", updatable = false)
     private Date createdAt = new Date();
+
+    @Column(name = "imageUrl")
+    private String imageUrl;
+
+    @Lob
+    @Column(name = "profile_pic", columnDefinition = "LONGBLOB")
+    private byte[] profilePic;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comments> comments;
@@ -34,10 +39,9 @@ public class Posts {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Likes> likes;
 
-    private String imageUrl;
-
     public Posts() {}
 
+    // Getters and Setters
     public int getId() {
         return id;
     }
@@ -62,12 +66,12 @@ public class Posts {
         this.content = content;
     }
 
-    public byte[] getImage() {
-        return image;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setImage(byte[] image) {
-        this.image = image;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public Date getCreatedAt() {
@@ -76,6 +80,22 @@ public class Posts {
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public byte[] getProfilePic() {
+        return profilePic;
+    }
+
+    public void setProfilePic(byte[] profilePic) {
+        this.profilePic = profilePic;
     }
 
     public List<Comments> getComments() {
@@ -92,13 +112,5 @@ public class Posts {
 
     public void setLikes(List<Likes> likes) {
         this.likes = likes;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
     }
 }

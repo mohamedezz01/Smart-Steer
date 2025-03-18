@@ -61,6 +61,8 @@ public class TechController {
 
         Posts post = new Posts();
         post.setContent(content);
+        post.setAdmin(user);
+        post.setUserName(user.getUsername());
 
         String imageUrl = null;
         if (file != null && !file.isEmpty()) {
@@ -77,10 +79,9 @@ public class TechController {
         response.put("content", savedPost.getContent());
         response.put("createdAt", savedPost.getCreatedAt());
         response.put("imageUrl", savedPost.getImageUrl());
-
+        response.put("userName", savedPost.getUserName());
         return ResponseEntity.ok(response);
     }
-
 
     @GetMapping("/posts")
     public ResponseEntity<?> getAllPosts() {
@@ -88,20 +89,30 @@ public class TechController {
 
         List<PostResponse> response = new ArrayList<>();
         for (Posts post : posts) {
-
             PostResponse postResponse = new PostResponse();
             postResponse.setId(post.getId());
             postResponse.setContent(post.getContent());
             postResponse.setCreatedAt(post.getCreatedAt());
-
-            if (post.getImageUrl() != null) {
-                postResponse.setImageUrl(post.getImageUrl());
-            }
-
+            postResponse.setImageUrl(post.getImageUrl());
+            postResponse.setUserName(post.getAdmin().getUsername());
+            postResponse.setProfilePic(post.getAdmin().getProfilePicture());
+            postResponse.setProfilePictureUrl("/profilePicture?userId=" + post.getAdmin().getId());
             response.add(postResponse);
         }
 
         return ResponseEntity.ok(response);
+    }
+    @GetMapping("/profilePicture")
+    public ResponseEntity<byte[]> getProfilePicture(@RequestParam int userId) {
+        User user = userService.findById(userId);
+
+        if (user == null || user.getProfilePicture() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(user.getProfilePicture());
     }
     @GetMapping("/posts/{id}")
     public ResponseEntity<?> getPostById(@PathVariable int id) {
@@ -218,19 +229,21 @@ public class TechController {
     /// Comments ///
 
     @PostMapping("/comments")
-    public ResponseEntity<?> addComment(@RequestBody Comments comment) {
+    public ResponseEntity<?> addComment(@RequestHeader("Authorization") String authHeader,
+            @RequestBody Comments comment) {
+
+        String token = authHeader.substring(7);
+        String email = jwtUtil.extractEmail(token);
+
+        User user = userService.findByEmail(email);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+        }
+
+        comment.setUser(user);
+        comment.setUserName(user.getUsername());
+
         Comments savedComment = commentService.addComment(comment);
-
-        Optional<Posts> postOptional = postService.getPostById(comment.getPost().getId());
-        if (postOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Post not found");
-        }
-
-        // Check if the user exists
-        Optional<User> userOptional = Optional.ofNullable(userService.findById(comment.getUser().getId()));
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found");
-        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Comment added successfully");
@@ -238,6 +251,7 @@ public class TechController {
         response.put("comment", savedComment.getCommentText());
         response.put("createdAt", savedComment.getCreatedAt());
         response.put("userId", savedComment.getUser().getId());
+        response.put("userName", savedComment.getUserName());
 
         return ResponseEntity.ok(response);
     }
@@ -254,10 +268,10 @@ public class TechController {
             commentResponse.put("comment", comment.getCommentText());
             commentResponse.put("createdAt", comment.getCreatedAt());
             commentResponse.put("userId", comment.getUser().getId());
+            commentResponse.put("userName", comment.getUser().getUsername());
 
             response.add(commentResponse);
         }
-
         return ResponseEntity.ok(response);
     }
 
