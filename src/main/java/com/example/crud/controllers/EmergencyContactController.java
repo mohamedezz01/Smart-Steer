@@ -85,7 +85,6 @@ public class EmergencyContactController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
-        // Extract the token and username
         String token = authHeader.replace("Bearer ", "");
         String email = jwtUtil.extractEmail(token);
 

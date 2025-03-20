@@ -43,7 +43,6 @@ public class UserRestController {
 
         User existingUser = userService.findByEmail(user.getEmail());
 
-        //if email exists but not verified, resend verification code
         if (existingUser != null) {
             if (!existingUser.isEmailVerified()) {
                 String newVerificationCode = VerificationUtil.generateVerificationCode();
@@ -58,13 +57,11 @@ public class UserRestController {
                 return ResponseEntity.ok(response);
             }
 
-            //email already exists and verified
             response.put("message", "Email already exists");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
 
-        //new user signup Process
         String passwordPattern = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{10,}$";
         if (!user.getPassword().matches(passwordPattern)) {
             response.put("message", "Password must be at least 10 characters long and include at least one uppercase letter, one number, and one special character.");

@@ -218,7 +218,6 @@ public class TechController {
     public ResponseEntity<?> likePost(@RequestBody Likes like) {
         Likes savedLike = likeService.addLike(like);
 
-        // Construct a custom response
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Post liked successfully");
         response.put("likeId", savedLike.getId());
@@ -267,7 +266,6 @@ public class TechController {
     public ResponseEntity<?> getCommentsByPost(@PathVariable int postId) {
         List<Comments> comments = commentService.getCommentsByPostId(postId);
 
-        // Construct a custom response
         List<Map<String, Object>> response = new ArrayList<>();
         for (Comments comment : comments) {
             Map<String, Object> commentResponse = new HashMap<>();
