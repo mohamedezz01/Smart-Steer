@@ -97,6 +97,13 @@ public class TechController {
             postResponse.setUserName(post.getAdmin().getUsername());
             postResponse.setProfilePic(post.getAdmin().getProfilePicture());
             postResponse.setProfilePictureUrl("/profilePicture?userId=" + post.getAdmin().getId());
+
+            postResponse.setLikeCount(post.getLikes().size());
+            List<String> likers = post.getLikes().stream()
+                    .map(like -> like.getUser().getUsername())
+                    .collect(Collectors.toList());
+            postResponse.setLikedByUsernames(likers);
+
             response.add(postResponse);
         }
 
@@ -251,7 +258,7 @@ public class TechController {
         response.put("comment", savedComment.getCommentText());
         response.put("createdAt", savedComment.getCreatedAt());
         response.put("userId", savedComment.getUser().getId());
-        response.put("userName", savedComment.getUserName());
+        response.put("userName", savedComment.getUser().getUsername());
 
         return ResponseEntity.ok(response);
     }

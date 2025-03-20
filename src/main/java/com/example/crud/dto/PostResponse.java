@@ -2,6 +2,7 @@ package com.example.crud.dto;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 public class PostResponse {
     private int id;
@@ -11,6 +12,8 @@ public class PostResponse {
     private String userName;
     private byte[] profilePic;
     private String profilePictureUrl;
+    private int likeCount;
+    private List<String> likedByUsernames;
 
     public int getId() {
         return id;
@@ -65,5 +68,21 @@ public class PostResponse {
 
     public void setProfilePictureUrl(String profilePictureUrl) {
         this.profilePictureUrl = profilePictureUrl;
+    }
+
+    public int getLikeCount() {
+        return likeCount;
+    }
+
+    public void setLikeCount(int likeCount) {
+        this.likeCount = likeCount;
+    }
+
+    public List<String> getLikedByUsernames() {
+        return likedByUsernames;
+    }
+
+    public void setLikedByUsernames(List<String> likedByUsernames) {
+        this.likedByUsernames = likedByUsernames;
     }
 }
