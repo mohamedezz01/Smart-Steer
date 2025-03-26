@@ -2,9 +2,14 @@ package com.example.crud.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.Date;
 
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "users")
 public class User {
@@ -50,7 +55,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
-
     @Column(name = "reset_token")
     private String resetToken;
 
@@ -62,12 +66,12 @@ public class User {
 
     @Column(name = "updated_at")
     private Date updatedAt;
+
     @Column(name = "deletion_token")
     private String deletionToken;
 
     @Column(name = "deletion_token_expiry")
     private Date deletionTokenExpiry;
-
 
     @Lob
     @Column(columnDefinition = "LONGBLOB")
@@ -76,197 +80,7 @@ public class User {
     @Column(name = "roles")
     private String roles;
 
-    public User() {
-    }
-
-    public User(int id, String firstName, String lastName, String email, String password, String username, String phone, Date dob, boolean isEmailVerified, String verificationCode, Gender gender, String resetToken, Date resetTokenExpiry, String roles) {
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.password = password;
-        this.username = username;
-        this.phone = phone;
-        this.dob = dob;
-        this.isEmailVerified = isEmailVerified;
-        this.verificationCode = verificationCode;
-        this.gender = gender;
-        this.resetToken = resetToken;
-        this.resetTokenExpiry = resetTokenExpiry;
-        this.roles=roles;
-    }
-
-    public Date getUpdatedAt() {
-    return updatedAt;
-    }
-
-    public void setUpdatedAt(Date updatedAt) {
-    this.updatedAt = updatedAt;
-    }
-
-    public Date getTokenExpiration() {
-    return tokenExpiration;
-    }
-
-    public void setTokenExpiration(Date tokenExpiration) {
-    this.tokenExpiration = tokenExpiration;
-    }
-
-    public String getResetToken() {
-    return resetToken;
-    }
-
-    public void setResetToken(String resetToken) {
-    this.resetToken = resetToken;
-    }
-
-    public Date getResetTokenExpiry() {
-    return resetTokenExpiry;
-    }
-
-    public void setResetTokenExpiry(Date resetTokenExpiry) {
-    this.resetTokenExpiry = resetTokenExpiry;
-    }
-
-    public Gender getGender() {
-    return gender;
-    }
-
-    public void setGender(Gender gender) {
-    this.gender = gender;
-    }
-
-    public String getVerificationCode() {
-    return verificationCode;
-    }
-
-    public void setVerificationCode(String verificationCode) {
-    this.verificationCode = verificationCode;
-    }
-
-
-    public boolean isEmailVerified() {
-    return isEmailVerified;
-    }
-
-    public void setEmailVerified(boolean emailVerified) {
-    isEmailVerified = emailVerified;
-    }
-
-    public String getPhone() {
-    return phone;
-    }
-
-
-    public void setPhone(String phone) {
-    this.phone = phone;
-    }
-
-    public Date getDob() {
-    return dob;
-    }
-
-
-    public void setDob(Date dob) {
-    this.dob = dob;
-    }
-
-    public int getId() {
-    return id;
-    }
-
-    public void setId(int id) {
-    this.id = id;
-    }
-
-    public String getFirstName() {
-    return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-    this.firstName = firstName;
-    }
-
-    public String getLastName() {
-    return lastName;
-    }
-
-    public void setLastName(String lastName) {
-    this.lastName = lastName;
-    }
-
-    public String getEmail() {
-    return email;
-    }
-
-    public void setEmail(String email) {
-    this.email = email;
-    }
-
-    public String getPassword() {
-    return password;
-    }
-
-    public void setPassword(String password) {
-    this.password = password;
-    }
-
-    public String getUsername() {
-    return username;
-    }
-
-
-    public void setUsername(String username) {
-    this.username = username;
-    }
-    public String getDeletionToken() {
-    return deletionToken;
-    }
-
-    public void setDeletionToken(String deletionToken) {
-    this.deletionToken = deletionToken;
-    }
-
-    public Date getDeletionTokenExpiry() {
-    return deletionTokenExpiry;
-    }
-
-    public void setDeletionTokenExpiry(Date deletionTokenExpiry) {
-        this.deletionTokenExpiry = deletionTokenExpiry;
-    }
-    public byte[] getProfilePicture() {
-        return profilePicture;
-    }
-
-    public void setProfilePicture(byte[] profilePicture) {
-        this.profilePicture = profilePicture;
-    }
     public enum Gender {
         MALE, FEMALE
-    }
-
-    public String getRoles() {
-        return roles;
-    }
-
-    public void setRoles(String roles) {
-        this.roles = roles;
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                ", username='" + username + '\'' +
-                ", phone='" + phone + '\'' +
-                ", dob=" + dob +
-                ", isEmailVerified=" + isEmailVerified +
-                ", verificationCode='" + verificationCode + '\'' +
-                ", gender=" + gender +
-                '}';
     }
 }
