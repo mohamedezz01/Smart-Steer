@@ -8,6 +8,9 @@ import com.example.crud.util.VerificationUtil;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +49,11 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "user", key = "#result.id"),
+            @CacheEvict(value = "userByEmail", key = "#result.email"),
+            @CacheEvict(value = {"userList", "userDTOList"}, allEntries = true)
+    })
     public User save(User user) {
         if (!user.getPassword().startsWith("$2a$")) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -58,6 +66,10 @@ public class UserServiceImpl implements UserService {
         return passwordEncoder.matches(password, user.getPassword());
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "user", key = "#user.id"),
+            @CacheEvict(value = {"userList", "userDTOList"}, allEntries = true)
+    })
     @Override
     public boolean changePassword(User user, String oldPassword, String newPassword) {
         user.setPassword(passwordEncoder.encode(newPassword));
@@ -65,11 +77,16 @@ public class UserServiceImpl implements UserService {
         return true;
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "user", key = "#Id"),
+            @CacheEvict(value = {"userList", "userDTOList"}, allEntries = true)
+    })
     @Override
     public void deleteById(int Id) {
         userRepository.deleteById(Id);
     }
 
+    @Cacheable(value = "userByEmail", key = "#email", unless="#result == null")
     @Override
     public User findByEmail(String email) {
         return userRepository.findByEmail(email);
@@ -92,6 +109,8 @@ public class UserServiceImpl implements UserService {
     public List<User> findAll() {
         return userRepository.findAll();
     }
+
+    @Cacheable("userDTOList")
     @Override
     public List<UserDTO> findAllUsersWithSpecificData() {
         List<User> users = userRepository.findAll();
@@ -104,6 +123,7 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "user", key = "#Id", unless="#result == null")
     @Override
     public User findById(int Id) {
         Optional<User> Result = userRepository.findById(Id);
@@ -127,6 +147,11 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByResetToken(resetToken);
     }
 
+
+    @Caching(evict = {
+            @CacheEvict(value = "user", key = "#userId"),
+            @CacheEvict(value = {"userList", "userDTOList"}, allEntries = true)
+    })
     @Override
     public String updateUserFields(int userId, String firstName, String lastName, String phone, Date dob) {
         User user = findById(userId);
@@ -142,6 +167,11 @@ public class UserServiceImpl implements UserService {
         return jwtUtil.generateToken(user.getUsername(), user.getEmail(), roles);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "user", key = "#user.id"),
+            @CacheEvict(value = "userByEmail", key = "#user.email"),
+            @CacheEvict(value = {"userList", "userDTOList"}, allEntries = true)
+    })
     @Override
     public void deleteAccount(User user) {
         userRepository.delete(user);
@@ -158,6 +188,6 @@ public class UserServiceImpl implements UserService {
         return user.getDeletionToken() != null &&
                 user.getDeletionToken().equals(deletionToken) &&
                 user.getDeletionTokenExpiry() != null &&
-                user.getDeletionTokenExpiry().after(new Date()); // Check expiry
+                user.getDeletionTokenExpiry().after(new Date()); //check expiry
     }
 }

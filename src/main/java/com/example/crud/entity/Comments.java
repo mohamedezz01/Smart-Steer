@@ -1,5 +1,7 @@
 package com.example.crud.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.Date;
 import lombok.*;
@@ -18,6 +20,7 @@ public class Comments {
 
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
+    @JsonIgnore
     private Posts post;
 
     @ManyToOne

@@ -1,5 +1,7 @@
 package com.example.crud.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -42,7 +44,8 @@ public class Posts {
     @Column(name = "profile_pic", columnDefinition = "LONGBLOB")
     private byte[] profilePic;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
+    @JsonIgnore
     private List<Comments> comments;
 
     @OneToMany(
@@ -51,6 +54,7 @@ public class Posts {
             orphanRemoval = true,
             fetch = FetchType.EAGER
     )
+    @JsonIgnore
     private List<Likes> likes;
 
 }

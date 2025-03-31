@@ -1,5 +1,6 @@
 package com.example.crud.controllers;
 
+import com.example.crud.dto.LikeRequestDTO;
 import com.example.crud.dto.PostResponse;
 import com.example.crud.entity.Comments;
 import com.example.crud.entity.Likes;
@@ -8,6 +9,7 @@ import com.example.crud.entity.User;
 import com.example.crud.service.*;
 import com.example.crud.util.JwtUtil;
 import com.example.crud.util.VerificationUtil;
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -85,30 +87,10 @@ public class TechController {
 
     @GetMapping("/posts")
     public ResponseEntity<?> getAllPosts() {
-        List<Posts> posts = postService.getAllPosts();
-
-        List<PostResponse> response = new ArrayList<>();
-        for (Posts post : posts) {
-            PostResponse postResponse = new PostResponse();
-            postResponse.setId(post.getId());
-            postResponse.setContent(post.getContent());
-            postResponse.setCreatedAt(post.getCreatedAt());
-            postResponse.setImageUrl(post.getImageUrl());
-            postResponse.setUserName(post.getAdmin().getUsername());
-            postResponse.setProfilePic(post.getAdmin().getProfilePicture());
-            postResponse.setProfilePictureUrl("/profilePicture?userId=" + post.getAdmin().getId());
-
-            postResponse.setLikeCount(post.getLikes().size());
-            List<String> likers = post.getLikes().stream()
-                    .map(like -> like.getUser().getUsername())
-                    .collect(Collectors.toList());
-            postResponse.setLikedByUsernames(likers);
-
-            response.add(postResponse);
-        }
-
+        List<PostResponse> response = postService.getAllPostsAsDTO();
         return ResponseEntity.ok(response);
     }
+
     @GetMapping("/profilePicture")
     public ResponseEntity<byte[]> getProfilePicture(@RequestParam int userId) {
         User user = userService.findById(userId);
@@ -199,7 +181,7 @@ public class TechController {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("message", "Delete image: " + filePath);
         requestBody.put("sha", sha);
-        requestBody.put("branch", "ImageStore"); // Include branch in request body
+        requestBody.put("branch", "ImageStore");
 
         ResponseEntity<Map> deleteResponse = restTemplate.exchange(
                 apiUrl,
@@ -215,7 +197,20 @@ public class TechController {
 
     /// Likes ///
     @PostMapping("/likes")
-    public ResponseEntity<?> likePost(@RequestBody Likes like) {
+    public ResponseEntity<?> likePost(@RequestBody LikeRequestDTO likeRequest, @RequestHeader("Authorization") String authHeader) {
+        //get authenticated user
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtil.extractEmail(token);
+        User user = userService.findByEmail(email);
+
+        // Get the post
+        Posts post = postService.getPostById(likeRequest.getPostId())
+                .orElseThrow(() -> new RuntimeException("Post not found with id: " + likeRequest.getPostId()));
+
+        Likes like = new Likes();
+        like.setPost(post);
+        like.setUser(user);
+
         Likes savedLike = likeService.addLike(like);
 
         Map<String, Object> response = new HashMap<>();
@@ -227,9 +222,18 @@ public class TechController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/likes/{postId}/{userId}")
-    public void unlikePost(@PathVariable int postId, @PathVariable int userId) {
-        likeService.removeLike(postId, userId);
+    @DeleteMapping("likes/{postId}")
+    public ResponseEntity<?> unlikePost(@PathVariable int postId,  @RequestHeader("Authorization") String authHeader) {
+
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtil.extractEmail(token);
+        User user = userService.findByEmail(email);
+
+        likeService.removeLike(postId, user.getId());
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Post unliked successfully");
+        return ResponseEntity.ok(response);
     }
 
     /// Comments ///
