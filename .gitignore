@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+/src/main/resources/test.env
+
+REDIS_HOST=redis-19092.c289.us-west-1-2.ec2.redns.redis-cloud.com
+REDIS_PORT=19092
+REDIS_PASSWORD=A1Mrd5VQEJ7dY2MygKkebBAQoE7Zd5r8
+REDIS_SSL=false

@@ -1,10 +1,14 @@
 package com.example.crud.security;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration; // Import this
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext; // Import this
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -12,6 +16,9 @@ import java.time.Duration; // Optional: Import for TTL
 
 @Configuration
 public class RedisConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(RedisConfig.class);
+
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
@@ -23,6 +30,23 @@ public class RedisConfig {
         // template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer()); // Optional: if using hashes
         // template.afterPropertiesSet(); // Usually called automatically
         return template;
+    }
+
+    @Bean
+    public CommandLineRunner testRedisConnection(StringRedisTemplate redisTemplate) {
+        return args -> {
+            try {
+                redisTemplate.opsForValue().set("testKey", "testValue");
+                String value = redisTemplate.opsForValue().get("testKey");
+                if ("testValue".equals(value)) {
+                    logger.info("Redis is connected and working!");
+                } else {
+                    logger.warn(" Redis connection test failed (unexpected value).");
+                }
+            } catch (Exception e) {
+                logger.error(" Redis connection failed!", e);
+            }
+        };
     }
 
     @Bean
