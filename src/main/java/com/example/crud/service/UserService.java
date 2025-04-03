@@ -22,4 +22,5 @@ public interface UserService {
     public void saveDeletionToken(User user, String deletionToken);
     public boolean isDeletionTokenValid(User user, String deletionToken);
     public List<UserDTO> findAllUsersWithSpecificData();
+    User findByPhone(String phone);
 }

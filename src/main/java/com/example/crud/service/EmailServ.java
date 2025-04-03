@@ -10,4 +10,5 @@ public interface EmailServ {
      void passwordForgottenEmail(String to,String firstName, String subject, String resetToken)throws MessagingException;
      void ownerEmail(String to,String firstName,String lastName, String subject)throws MessagingException;
 
+    void Sendnotify(String to, String firstName, String addedByName, String addedByPhone, String phone) throws MessagingException;
 }

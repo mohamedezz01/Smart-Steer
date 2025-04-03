@@ -109,6 +109,27 @@ public class EmailService implements EmailServ {
     }
 
     @Override
+    public void Sendnotify(String to, String firstName, String addedByName, String addedByPhone, String phone) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        helper.setTo(to);
+        helper.setSubject("You Have Been Added as an Emergency Contact");
+        helper.setFrom("SmartSteer@outlook.com");
+
+        Context context = new Context();
+        context.setVariable("firstName", firstName);
+        context.setVariable("addedByName", addedByName);
+        context.setVariable("addedByPhone", addedByPhone);
+        context.setVariable("phone", phone);
+
+        String htmlContent = templateEngine.process("notifyEmergency", context);
+        helper.setText(htmlContent, true);
+
+        mailSender.send(message);
+    }
+
+    @Override
     public void accountDeletedEmail(String to, String firstName, String subject, String body) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");

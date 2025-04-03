@@ -49,6 +49,8 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
+
+
     @Caching(evict = {
             @CacheEvict(value = "user", key = "#result.id"),
             @CacheEvict(value = "userByEmail", key = "#result.email"),
@@ -121,6 +123,11 @@ public class UserServiceImpl implements UserService {
                         user.getProfilePicture()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public User findByPhone(String phone) {
+        return userRepository.findByPhone(phone);
     }
 
     @Cacheable(value = "user", key = "#Id", unless="#result == null")

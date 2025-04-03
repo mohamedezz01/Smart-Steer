@@ -2,6 +2,7 @@ package com.example.crud.controllers;
 
 import com.example.crud.entity.EmergencyContact;
 import com.example.crud.entity.User;
+import com.example.crud.service.EmailService;
 import com.example.crud.service.EmergencyContactService;
 import com.example.crud.service.UserService;
 import com.example.crud.util.JwtUtil;
@@ -19,11 +20,14 @@ public class EmergencyContactController {
     private final EmergencyContactService emergencyContactService;
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final EmailService emailService;
+
     @Autowired
-    public EmergencyContactController(EmergencyContactService emergencyContactService, UserService userService, JwtUtil jwtUtil) {
+    public EmergencyContactController(EmergencyContactService emergencyContactService, UserService userService, JwtUtil jwtUtil, EmailService emailService) {
         this.emergencyContactService = emergencyContactService;
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.emailService = emailService;
     }
 
     //add a new emergency contact
@@ -63,7 +67,10 @@ public class EmergencyContactController {
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-        //set user association and save contact
+
+        emergencyContactService.notifyUserIfPhoneExists(contact.getPhone(),user.getFirstName(),user.getPhone());
+
+
         contact.setUser(user);
         EmergencyContact savedContact = emergencyContactService.addContact(contact);
         response.put("message", "Emergency contact added successfully.");
@@ -154,6 +161,7 @@ public class EmergencyContactController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
+        emergencyContactService.notifyUserIfPhoneExists(existingContact.getPhone(),user.getFirstName(),user.getPhone());
         // Update fields and save the contact
         existingContact.setName(updatedContact.getName());
         existingContact.setPhone(updatedContact.getPhone());

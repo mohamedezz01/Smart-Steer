@@ -13,4 +13,5 @@ public interface EmergencyContactService {
     public boolean existsByPhoneAndUser(String phone, User user);
     EmergencyContact findById(int id);
     void deleteContact(int contactId);
+    public void notifyUserIfPhoneExists(String phone, String addedByName, String addedByPhone);
 }
