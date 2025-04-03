@@ -28,12 +28,12 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     private VerificationUtil verfificationUtil;
     @Autowired
-    private EmailService emailService;
+    private EmailServ emailService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
     @Autowired
-    public UserServiceImpl(UserRepository theUserRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, EmailService emailService) { // Updated constructor name
+    public UserServiceImpl(UserRepository theUserRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, EmailServ emailService) { // Updated constructor name
         this.userRepository = theUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;

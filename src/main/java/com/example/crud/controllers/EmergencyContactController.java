@@ -2,7 +2,7 @@ package com.example.crud.controllers;
 
 import com.example.crud.entity.EmergencyContact;
 import com.example.crud.entity.User;
-import com.example.crud.service.EmailService;
+import com.example.crud.service.EmailServ;
 import com.example.crud.service.EmergencyContactService;
 import com.example.crud.service.UserService;
 import com.example.crud.util.JwtUtil;
@@ -20,10 +20,11 @@ public class EmergencyContactController {
     private final EmergencyContactService emergencyContactService;
     private final UserService userService;
     private final JwtUtil jwtUtil;
-    private final EmailService emailService;
+    @Autowired
+    private EmailServ emailService;
 
     @Autowired
-    public EmergencyContactController(EmergencyContactService emergencyContactService, UserService userService, JwtUtil jwtUtil, EmailService emailService) {
+    public EmergencyContactController(EmergencyContactService emergencyContactService, UserService userService, JwtUtil jwtUtil, EmailServ emailService) {
         this.emergencyContactService = emergencyContactService;
         this.userService = userService;
         this.jwtUtil = jwtUtil;

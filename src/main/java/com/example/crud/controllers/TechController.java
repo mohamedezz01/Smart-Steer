@@ -36,10 +36,11 @@ public class TechController {
     private GitHubService gitHubService;
 
     private UserService userService;
-    private EmailService emailService;
+    @Autowired
+    private EmailServ emailService;
     private JwtUtil jwtUtil;
 
-    public TechController(UserService theUserService, EmailService emailService, JwtUtil jwtUtil) {
+    public TechController(UserService theUserService, EmailServ emailService, JwtUtil jwtUtil) {
         this.userService = theUserService;
         this.emailService = emailService;
         this.jwtUtil = jwtUtil;

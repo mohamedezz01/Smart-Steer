@@ -5,10 +5,7 @@ import com.example.crud.dto.DeleteAccountRequest;
 import com.example.crud.dto.SerialNumberRequest;
 import com.example.crud.entity.SerialNumber;
 import com.example.crud.entity.User;
-import com.example.crud.service.EmailService;
-import com.example.crud.service.SerialNumberService;
-import com.example.crud.service.TokenBlacklistService;
-import com.example.crud.service.UserService;
+import com.example.crud.service.*;
 import com.example.crud.util.JwtUtil;
 import com.example.crud.util.VerificationUtil;
 import jakarta.mail.MessagingException;
@@ -30,7 +27,8 @@ import java.util.*;
 public class SettingsRestController {
 
     private UserService userService;
-    private EmailService emailService;
+    @Autowired
+    private EmailServ emailService;
     private VerificationUtil verficationUtil;
     private JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
@@ -39,7 +37,7 @@ public class SettingsRestController {
     private SerialNumberService serialNumberService;
 
 
-    public SettingsRestController(UserService theUserService,  EmailService emailService, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService,SerialNumberService serialNumberService) {
+    public SettingsRestController(UserService theUserService,  EmailServ emailService, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService,SerialNumberService serialNumberService) {
         this.userService = theUserService;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;

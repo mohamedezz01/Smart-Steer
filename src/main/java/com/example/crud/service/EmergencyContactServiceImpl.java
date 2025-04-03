@@ -5,6 +5,7 @@ import com.example.crud.entity.EmergencyContact;
 import com.example.crud.entity.User;
 import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -17,11 +18,12 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
 
     private final EmergencyContactRepository emergencyContactRepository;
     private final UserService userService;
-    private final EmailService emailService;
+    @Autowired
+    private EmailServ emailService;
 
     public EmergencyContactServiceImpl(EmergencyContactRepository emergencyContactRepository,
                                        UserService userService,
-                                       EmailService emailService) {
+                                       EmailServ emailService) {
         this.emergencyContactRepository = emergencyContactRepository;
         this.userService = userService;
         this.emailService = emailService;

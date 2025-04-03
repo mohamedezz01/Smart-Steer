@@ -3,11 +3,13 @@ package com.example.crud.controllers;
 import com.example.crud.dto.ResetPasswordRequest;
 import com.example.crud.dto.UserDTO;
 import com.example.crud.entity.User;
+import com.example.crud.service.EmailServ;
 import com.example.crud.service.EmailService;
 import com.example.crud.service.UserService;
 import com.example.crud.util.JwtUtil;
 import com.example.crud.util.VerificationUtil;
 import jakarta.mail.MessagingException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,14 +23,15 @@ import java.util.*;
 public class UserRestController {
 
     private UserService userService;
-    private EmailService emailService;
+    @Autowired
+    private EmailServ emailService;
     private VerificationUtil verficationUtil;
     private JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private MessageSource messageSource;
 
 
-    public UserRestController(UserService theUserService, EmailService emailService, PasswordEncoder passwordEncoder,JwtUtil jwtUtil,MessageSource messageSource) {
+    public UserRestController(UserService theUserService, EmailServ emailService, PasswordEncoder passwordEncoder,JwtUtil jwtUtil,MessageSource messageSource) {
         this.userService = theUserService;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;

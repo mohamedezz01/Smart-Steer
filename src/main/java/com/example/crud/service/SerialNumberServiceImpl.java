@@ -17,10 +17,11 @@ import java.util.*;
 public class SerialNumberServiceImpl implements SerialNumberService {
 
     private final SerialNumberRepository serialNumberRepository;
-    private final EmailService emailService;
+    @Autowired
+    private EmailServ emailService;
     private final JwtUtil jwtUtil;
     @Autowired
-    public SerialNumberServiceImpl(SerialNumberRepository serialNumberRepository, EmailService emailService,JwtUtil jwtUtil) {
+    public SerialNumberServiceImpl(SerialNumberRepository serialNumberRepository, EmailServ emailService,JwtUtil jwtUtil) {
         this.serialNumberRepository = serialNumberRepository;
         this.emailService = emailService;
         this.jwtUtil=jwtUtil;
