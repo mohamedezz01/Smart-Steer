@@ -122,7 +122,7 @@ public class EmergencyContactController {
         return ResponseEntity.ok(response);
     }
 
-    //udate an existing emergency contact
+    //update an existing emergency contact
     @PutMapping("/update/{contactId}")
     public ResponseEntity<Map<String, Object>> updateEmergencyContact(
             @PathVariable int contactId, @RequestBody EmergencyContact updatedContact, @RequestHeader("Authorization") String authHeader) {
