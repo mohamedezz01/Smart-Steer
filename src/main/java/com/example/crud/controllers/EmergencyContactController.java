@@ -68,6 +68,7 @@ public class EmergencyContactController {
         EmergencyContact savedContact = emergencyContactService.addContact(contact);
         response.put("message", "Emergency contact added successfully.");
         response.put("contact", Map.of(
+                "id",savedContact.getId(),
                 "name", savedContact.getName(),
                 "phone", savedContact.getPhone()
         ));
@@ -109,6 +110,7 @@ public class EmergencyContactController {
 
         List<Map<String, String>> filteredContacts = contacts.stream()
                 .map(contact -> Map.of(
+                        "id",String.valueOf(contact.getId()),
                         "name", contact.getName(),
                         "phone", contact.getPhone()
                 ))
@@ -158,6 +160,7 @@ public class EmergencyContactController {
         EmergencyContact savedContact = emergencyContactService.addContact(existingContact);
         response.put("message", "Emergency contact updated successfully");
         response.put("contact", Map.of(
+                "id",savedContact.getId(),
                 "name", savedContact.getName(),
                 "phone", savedContact.getPhone()
         ));
