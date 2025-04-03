@@ -103,12 +103,10 @@ public class UserRestController {
         user.setRoles("ROLE_USER");
 
         userService.save(user);
-        int user_id=user.getId();
         List<String> roles = Arrays.asList(user.getRoles().split(","));
         String token = jwtUtil.generateToken(user.getUsername(), user.getEmail(), roles);
 
         response.put("message", "Email verified successfully!");
-        response.put("id",user_id);
         response.put("token", token);
         response.put("roles", roles);
         return ResponseEntity.ok(response);
@@ -144,11 +142,10 @@ public class UserRestController {
              emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), subject, body);
              return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
          }
-         int user_id=user.getId();
+
          List<String> roles = Arrays.asList(user.getRoles().split(","));
          String token = jwtUtil.generateToken(user.getUsername(), user.getEmail(), roles);
 
-         response.put("id",user_id);
          response.put("message", messageSource.getMessage("login.success", null, locale));
          response.put("token", token);
          response.put("roles", roles);
