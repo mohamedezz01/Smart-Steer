@@ -32,22 +32,6 @@ public class RedisConfig {
         return template;
     }
 
-    @Bean
-    public CommandLineRunner testRedisConnection(StringRedisTemplate redisTemplate) {
-        return args -> {
-            try {
-                redisTemplate.opsForValue().set("testKey", "testValue");
-                String value = redisTemplate.opsForValue().get("testKey");
-                if ("testValue".equals(value)) {
-                    logger.info("Redis is connected and working!");
-                } else {
-                    logger.warn(" Redis connection test failed (unexpected value).");
-                }
-            } catch (Exception e) {
-                logger.error(" Redis connection failed!", e);
-            }
-        };
-    }
 
     @Bean
     public RedisCacheConfiguration cacheConfiguration() {
