@@ -2,7 +2,6 @@ package com.example.crud.controllers;
 
 import com.example.crud.dto.ResetPasswordRequest;
 import com.example.crud.dto.UserDTO;
-import com.example.crud.entity.EmergencyContact;
 import com.example.crud.entity.User;
 import com.example.crud.service.EmailService;
 import com.example.crud.service.UserService;
@@ -342,7 +341,7 @@ public class UserRestController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
-        userService.deleteAccount(user);;
+        userService.deleteAccount(user);
 
         response.put("message", "Deleted successfully");
         response.put("status", HttpStatus.OK.value());
