@@ -17,9 +17,6 @@ import java.time.Duration; // Optional: Import for TTL
 @Configuration
 public class RedisConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(RedisConfig.class);
-
-
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
@@ -31,7 +28,6 @@ public class RedisConfig {
         // template.afterPropertiesSet(); // Usually called automatically
         return template;
     }
-
 
     @Bean
     public RedisCacheConfiguration cacheConfiguration() {
