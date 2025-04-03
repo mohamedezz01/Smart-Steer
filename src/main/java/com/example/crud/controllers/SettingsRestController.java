@@ -55,7 +55,7 @@ public class SettingsRestController {
         Map<String, Object> response = new HashMap<>();
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.put("message", "Authorization header missing or invalid.");
+            response.put("message", "Authorization header missing or invalid");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
@@ -79,7 +79,7 @@ public class SettingsRestController {
         String body = "Your verification code: " + verificationCode;
         emailService.sendVerificationEmail(email, user.getFirstName(), subject, body);
 
-        response.put("message", "Verification code sent to current email.");
+        response.put("message", "Verification code sent to current email");
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
@@ -96,7 +96,7 @@ public class SettingsRestController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
         if (verificationCode == null || verificationCode.isEmpty()) {
-            response.put("message", "Verification code is required.");
+            response.put("message", "Verification code is required");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.badRequest().body(response);
         }
@@ -141,7 +141,7 @@ public class SettingsRestController {
         }
         String newEmail = requestBody.get("newEmail");
         if (newEmail == null || newEmail.isEmpty() || newEmail.equals(email)) {
-            response.put("message", "Invalid or duplicate email provided.");
+            response.put("message", "Invalid or duplicate email provided");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
@@ -385,7 +385,7 @@ public class SettingsRestController {
         }
         //2MB max
         if (file.getSize() > 2 * 1024 * 1024) {
-            response.put("message", "Image size must be less than 2MB.");
+            response.put("message", "Image size must be less than 2MB");
             return ResponseEntity.badRequest().body(response);
         }
 
@@ -394,13 +394,13 @@ public class SettingsRestController {
         User user = userService.findByEmail(email);
 
         if (user == null) {
-            response.put("message", "User not found.");
+            response.put("message", "User not found");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
         try {
             user.setProfilePicture(file.getBytes());
             userService.save(user);
-            response.put("message", "Profile picture uploaded successfully.");
+            response.put("message", "Profile picture uploaded successfully");
             return ResponseEntity.ok(response);
         } catch (IOException e) {
             response.put("message", "Failed to process image.");
