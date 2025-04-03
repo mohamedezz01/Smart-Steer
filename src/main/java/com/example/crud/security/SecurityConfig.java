@@ -74,7 +74,7 @@ public class SecurityConfig {
 
                                 .requestMatchers(HttpMethod.PUT,
                                         "/GP/emergency/update/{contactId}"
-                                ).hasAnyAuthority("ROLE_ADMIN", "ROLE_OWNER")
+                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN", "ROLE_OWNER")
 
                                 .requestMatchers(HttpMethod.DELETE,
                                         "/GP/users/**",
