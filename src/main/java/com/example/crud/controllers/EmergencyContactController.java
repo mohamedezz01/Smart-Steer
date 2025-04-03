@@ -66,10 +66,13 @@ public class EmergencyContactController {
         //set user association and save contact
         contact.setUser(user);
         EmergencyContact savedContact = emergencyContactService.addContact(contact);
-
         response.put("message", "Emergency contact added successfully.");
-        response.put("contact", savedContact);
+        response.put("contact", Map.of(
+                "name", savedContact.getName(),
+                "phone", savedContact.getPhone()
+        ));
         response.put("status", HttpStatus.OK.value());
+
         return ResponseEntity.ok(response);
     }
 
@@ -104,8 +107,15 @@ public class EmergencyContactController {
             return ResponseEntity.ok(response);
         }
 
+        List<Map<String, String>> filteredContacts = contacts.stream()
+                .map(contact -> Map.of(
+                        "name", contact.getName(),
+                        "phone", contact.getPhone()
+                ))
+                .toList();
+
         response.put("message", "Emergency contacts retrieved successfully.");
-        response.put("contacts", contacts);
+        response.put("contacts", filteredContacts);
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
@@ -146,9 +156,13 @@ public class EmergencyContactController {
         existingContact.setName(updatedContact.getName());
         existingContact.setPhone(updatedContact.getPhone());
         EmergencyContact savedContact = emergencyContactService.addContact(existingContact);
-
-        response.put("message", "Emergency contact updated successfully.");
+        response.put("message", "Emergency contact updated successfully");
+        response.put("contact", Map.of(
+                "name", savedContact.getName(),
+                "phone", savedContact.getPhone()
+        ));
         response.put("status", HttpStatus.OK.value());
+
         return ResponseEntity.ok(response);
     }
 
