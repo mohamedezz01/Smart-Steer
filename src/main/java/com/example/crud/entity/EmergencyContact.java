@@ -11,7 +11,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "emergency_contacts")
+@Table(name = "emergency_contacts", indexes ={ @Index(name = "idx_phone", columnList = "phone"),
+                                                @Index(name ="idx_name",columnList = "name")})
 public class EmergencyContact {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
