@@ -241,8 +241,7 @@ public class TechController {
 
     @PostMapping("/comments")
     public ResponseEntity<?> addComment(@RequestHeader("Authorization") String authHeader,
-            @RequestBody Comments comment) {
-
+                                        @RequestBody Comments comment) {
         String token = authHeader.substring(7);
         String email = jwtUtil.extractEmail(token);
 
@@ -251,6 +250,13 @@ public class TechController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
         }
 
+        int postId = comment.getPost().getId();
+        Optional<Posts> postOptional = postService.getPostById(postId);
+        if (postOptional.isEmpty()) {
+            return ResponseEntity.badRequest().body("Post not found");
+        }
+
+        comment.setPost(postOptional.get());
         comment.setUser(user);
         comment.setUserName(user.getUsername());
 
@@ -266,6 +272,7 @@ public class TechController {
 
         return ResponseEntity.ok(response);
     }
+
 
     @GetMapping("/comments/post/{postId}")
     public ResponseEntity<?> getCommentsByPost(@PathVariable int postId) {

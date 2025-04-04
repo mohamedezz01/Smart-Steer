@@ -48,12 +48,6 @@ public class PostService {
                             .map(like -> like.getUser().getUsername())
                             .collect(Collectors.toList()) : Collections.emptyList();
             dto.setLikedByUsernames(likedByUsernames);
-
-            // Option B: Using LikeService (more reliable if EAGER causes issues, may hit cache)
-            // dto.setLikeCount((int) likeService.countLikesByPostId(post.getId()));
-            // // Getting liked usernames via service might require a new LikeService method
-            // dto.setLikedByUsernames(likeService.getLikerUsernamesForPost(post.getId())); // Example method
-
             return dto;
         }).collect(Collectors.toList());
     }
@@ -68,15 +62,16 @@ public class PostService {
         return postRepository.findByAdminId(adminId);
     }
 
-    @CacheEvict(value = {"allPosts", "adminPosts"}, allEntries = true)
+    @CacheEvict(value = {"post", "allPosts", "adminPosts", "allPostsDTO"}, allEntries = true)
+    @Transactional
+    public void deletePost(int id) {
+        postRepository.deleteById(id);
+    }
+
+    @CacheEvict(value = {"allPosts", "adminPosts", "allPostsDTO"}, allEntries = true)
     @Transactional
     public Posts createPost(Posts post) {
         return postRepository.save(post);
     }
 
-    @CacheEvict(value = {"post", "allPosts", "adminPosts"}, allEntries = true, key = "#id")
-    @Transactional
-    public void deletePost(int id) {
-        postRepository.deleteById(id);
-    }
 }
