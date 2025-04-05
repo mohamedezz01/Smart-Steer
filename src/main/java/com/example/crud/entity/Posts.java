@@ -44,7 +44,7 @@ public class Posts {
     @Column(name = "profile_pic", columnDefinition = "LONGBLOB")
     private byte[] profilePic;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Comments> comments;
 

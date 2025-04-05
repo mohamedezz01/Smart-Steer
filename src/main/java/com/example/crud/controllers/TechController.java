@@ -11,6 +11,7 @@ import com.example.crud.util.JwtUtil;
 import com.example.crud.util.VerificationUtil;
 import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -291,10 +292,21 @@ public class TechController {
         }
         return ResponseEntity.ok(response);
     }
-
     @DeleteMapping("/comments/{id}")
-    public void deleteComment(@PathVariable int id) {
-        commentService.deleteComment(id);
+    public ResponseEntity<?> deleteComment(
+            @PathVariable int id,
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        try {
+            String token = authHeader.substring(7);
+            String username =jwtUtil.extractUsername(token);
+            commentService.deleteComment(id, username);
+            return ResponseEntity.ok().build();
+        } catch (EmptyResultDataAccessException e) {
+            return ResponseEntity.notFound().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
     }
 
     @GetMapping("/username")
