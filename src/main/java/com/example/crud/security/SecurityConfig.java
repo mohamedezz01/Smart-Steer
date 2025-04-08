@@ -59,7 +59,7 @@ public class SecurityConfig {
 
                                 .requestMatchers(HttpMethod.POST,
                                         "/GP/emergency/add"
-                                ).hasAnyAuthority("ROLE_ADMIN", "ROLE_OWNER")
+                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN", "ROLE_OWNER")
 
                                 .requestMatchers(HttpMethod.GET,
                                         "/GP/users",
