@@ -3,7 +3,6 @@ package com.example.crud.controllers;
 import com.example.crud.dto.ChangePasswordRequest;
 import com.example.crud.dto.DeleteAccountRequest;
 import com.example.crud.dto.SerialNumberRequest;
-import com.example.crud.entity.SerialNumber;
 import com.example.crud.entity.User;
 import com.example.crud.service.*;
 import com.example.crud.util.JwtUtil;

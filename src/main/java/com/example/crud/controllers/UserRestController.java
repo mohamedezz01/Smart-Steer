@@ -4,7 +4,6 @@ import com.example.crud.dto.ResetPasswordRequest;
 import com.example.crud.dto.UserDTO;
 import com.example.crud.entity.User;
 import com.example.crud.service.EmailServ;
-import com.example.crud.service.EmailService;
 import com.example.crud.service.UserService;
 import com.example.crud.util.JwtUtil;
 import com.example.crud.util.VerificationUtil;
@@ -103,11 +102,12 @@ public class UserRestController {
         user.setVerificationCode(null);
 
         user.setRoles("ROLE_USER");
-
+        int id =user.getId();
         userService.save(user);
         List<String> roles = Arrays.asList(user.getRoles().split(","));
         String token = jwtUtil.generateToken(user.getUsername(), user.getEmail(), roles);
 
+        response.put("id",id);
         response.put("message", "Email verified successfully!");
         response.put("token", token);
         response.put("roles", roles);
@@ -144,10 +144,11 @@ public class UserRestController {
              emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), subject, body);
              return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
          }
-
+         int id =user.getId();
          List<String> roles = Arrays.asList(user.getRoles().split(","));
          String token = jwtUtil.generateToken(user.getUsername(), user.getEmail(), roles);
 
+         response.put("id",id);
          response.put("message", messageSource.getMessage("login.success", null, locale));
          response.put("token", token);
          response.put("roles", roles);
