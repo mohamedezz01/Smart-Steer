@@ -53,8 +53,8 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
     }
 
     @Override
-    public void notifyUserIfPhoneExists(String phone, String addedByName, String addedByPhone) {
-        User existingUser = userService.findByPhone(phone);
+    public void notifyUserIfEmailExists(String email, String addedByName, String addedByPhone) {
+        User existingUser = userService.findByEmail(email);
         if (existingUser != null && existingUser.getEmail() != null) {
             try {
                 emailService.Sendnotify(
@@ -62,14 +62,19 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
                         existingUser.getFirstName(),
                         addedByName,
                         addedByPhone,
-                        phone
+                        email
                 );
             } catch (MessagingException e) {
                 log.error("Failed to send email to: {}", existingUser.getEmail(), e);
             }
         } else {
-            log.warn("User found but email is missing: {}", phone);
+            log.warn("User found but email is missing: {}", email);
         }
+    }
+
+    @Override
+    public boolean existsByEmailAndUser(String email, User user) {
+        return emergencyContactRepository.existsByEmailAndUser(email,user);
     }
 
 

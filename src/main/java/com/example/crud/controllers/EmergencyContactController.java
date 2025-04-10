@@ -68,9 +68,19 @@ public class EmergencyContactController {
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+        boolean emailExists=emergencyContactService.existsByEmailAndUser(contact.getEmail(),user);
+        if (emailExists) {
+            response.put("message", "A contact with the same email already exists");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
 
-        emergencyContactService.notifyUserIfPhoneExists(contact.getPhone(),user.getFirstName(),user.getPhone());
-
+        if(Objects.equals(contact.getEmail(), user.getEmail())){
+            response.put("message", "You can't use your email as a new contact. Please enter a different one");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        emergencyContactService.notifyUserIfEmailExists(contact.getEmail(),user.getFirstName(),user.getPhone());
 
         contact.setUser(user);
         EmergencyContact savedContact = emergencyContactService.addContact(contact);
@@ -78,7 +88,8 @@ public class EmergencyContactController {
         response.put("contact", Map.of(
                 "id",savedContact.getId(),
                 "name", savedContact.getName(),
-                "phone", savedContact.getPhone()
+                "phone", savedContact.getPhone(),
+                "email",savedContact.getEmail()
         ));
         response.put("status", HttpStatus.OK.value());
 
@@ -120,7 +131,8 @@ public class EmergencyContactController {
                 .map(contact -> Map.of(
                         "id",String.valueOf(contact.getId()),
                         "name", contact.getName(),
-                        "phone", contact.getPhone()
+                        "phone", contact.getPhone(),
+                        "email", contact.getEmail()
                 ))
                 .toList();
 
@@ -153,7 +165,6 @@ public class EmergencyContactController {
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
-
         //find and validate the existing contact
         EmergencyContact existingContact = emergencyContactService.findById(contactId);
         if (existingContact == null || existingContact.getUser().getId() != user.getId()) {
@@ -161,8 +172,30 @@ public class EmergencyContactController {
             response.put("status", HttpStatus.NOT_FOUND.value());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
+        boolean contactExists = emergencyContactService.existsByPhoneAndUser(existingContact.getPhone(), user);
+        if (contactExists) {
+            response.put("message", "A contact with the same phone number already exists");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        if(Objects.equals(existingContact.getPhone(), user.getPhone())){
+            response.put("message", "You can't use your profile number as a new contact. Please enter a different one");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        boolean emailExists=emergencyContactService.existsByEmailAndUser(existingContact.getEmail(),user);
+        if (emailExists) {
+            response.put("message", "A contact with the same email already exists");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
 
-        emergencyContactService.notifyUserIfPhoneExists(existingContact.getPhone(),user.getFirstName(),user.getPhone());
+        if(Objects.equals(existingContact.getEmail(), user.getEmail())){
+            response.put("message", "You can't use your email as a new contact. Please enter a different one");
+            response.put("status", HttpStatus.BAD_REQUEST.value());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        emergencyContactService.notifyUserIfEmailExists(existingContact.getPhone(),user.getFirstName(),user.getPhone());
         // Update fields and save the contact
         existingContact.setName(updatedContact.getName());
         existingContact.setPhone(updatedContact.getPhone());
@@ -171,7 +204,8 @@ public class EmergencyContactController {
         response.put("contact", Map.of(
                 "id",savedContact.getId(),
                 "name", savedContact.getName(),
-                "phone", savedContact.getPhone()
+                "phone", savedContact.getPhone(),
+                "email",savedContact.getEmail()
         ));
         response.put("status", HttpStatus.OK.value());
 

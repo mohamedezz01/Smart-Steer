@@ -12,5 +12,6 @@ public interface EmergencyContactRepository extends JpaRepository<EmergencyConta
     List<EmergencyContact> findAllByUserId(int userId);
 
         boolean existsByPhoneAndUser(String phone, User user);
+    boolean existsByEmailAndUser(String email, User user);
 
 }

@@ -26,21 +26,16 @@ public class LikeService {
     }
 
     @Caching(evict = {
-            @CacheEvict(value = "likeCount", key = "#result.post.id"), // Evict count using post ID from saved like
-            @CacheEvict(value = "userLikeStatus", key = "#result.post.id + '-' + #result.user.id") // Evict status using post/user IDs
+            @CacheEvict(value = "likeCount", key = "#like.post.id"),
+            @CacheEvict(value = "userLikeStatus", key = "#like.post.id + '-' + #like.user.id")
     })
     public Likes addLike(Likes like) {
-
         Optional<Likes> existingLike = likeRepository.findByPostIdAndUserId(
                 like.getPost().getId(),
                 like.getUser().getId()
         );
 
-        if (existingLike.isPresent()) {
-            return existingLike.get();
-        }
-
-        return likeRepository.save(like);
+        return existingLike.orElseGet(() -> likeRepository.save(like));
     }
 
     @Caching(evict = {
@@ -48,7 +43,7 @@ public class LikeService {
             @CacheEvict(value = "userLikeStatus", key = "#postId + '-' + #userId")
     })
     public void removeLike(int postId, int userId) {
-        Optional<Likes> like = likeRepository.findByPostIdAndUserId(postId, userId);
-        like.ifPresent(l -> likeRepository.deleteById(l.getId()));
+        likeRepository.findByPostIdAndUserId(postId, userId)
+                .ifPresent(like -> likeRepository.delete(like));
     }
 }

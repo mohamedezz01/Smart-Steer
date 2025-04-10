@@ -27,4 +27,7 @@ public class EmergencyContact {
 
     @Column(name = "phone", nullable = false)
     private String phone;
+
+    @Column(name = "email", nullable = false)
+    private String email;
 }
