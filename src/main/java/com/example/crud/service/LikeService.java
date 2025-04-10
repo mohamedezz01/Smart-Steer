@@ -3,10 +3,10 @@ package com.example.crud.service;
 import com.example.crud.entity.Likes;
 import com.example.crud.dao.LikeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
+
 import java.util.Optional;
 
 @Service
@@ -14,6 +14,9 @@ public class LikeService {
 
     @Autowired
     private LikeRepository likeRepository;
+
+    @Autowired
+    private CacheManager cacheManager;
 
     @Cacheable(value = "likeCount", key = "#postId")
     public long countLikesByPostId(int postId) {
@@ -25,25 +28,34 @@ public class LikeService {
         return likeRepository.findByPostIdAndUserId(postId, userId).isPresent();
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "likeCount", key = "#like.post.id"),
-            @CacheEvict(value = "userLikeStatus", key = "#like.post.id + '-' + #like.user.id")
-    })
     public Likes addLike(Likes like) {
-        Optional<Likes> existingLike = likeRepository.findByPostIdAndUserId(
-                like.getPost().getId(),
-                like.getUser().getId()
-        );
+        int postId = like.getPost().getId();
+        int userId = like.getUser().getId();
 
-        return existingLike.orElseGet(() -> likeRepository.save(like));
+        Optional<Likes> existingLike = likeRepository.findByPostIdAndUserId(postId, userId);
+        if (existingLike.isPresent()) {
+            return existingLike.get();
+        }
+
+        Likes savedLike = likeRepository.save(like);
+        evictLikeCaches(postId, userId);
+        return savedLike;
     }
 
-    @Caching(evict = {
-            @CacheEvict(value = "likeCount", key = "#postId"),
-            @CacheEvict(value = "userLikeStatus", key = "#postId + '-' + #userId")
-    })
     public void removeLike(int postId, int userId) {
-        likeRepository.findByPostIdAndUserId(postId, userId)
-                .ifPresent(like -> likeRepository.delete(like));
+        Optional<Likes> like = likeRepository.findByPostIdAndUserId(postId, userId);
+        if (like.isPresent()) {
+            likeRepository.delete(like.get());
+            evictLikeCaches(postId, userId);
+        }
+    }
+
+    private void evictLikeCaches(int postId, int userId) {
+        if (cacheManager.getCache("likeCount") != null) {
+            cacheManager.getCache("likeCount").evict(postId);
+        }
+        if (cacheManager.getCache("userLikeStatus") != null) {
+            cacheManager.getCache("userLikeStatus").evict(postId + "-" + userId);
+        }
     }
 }
