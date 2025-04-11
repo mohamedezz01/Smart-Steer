@@ -135,12 +135,12 @@ public class EmailService implements EmailServ {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        // email recipient, subject, and sender
+        //email recipient, subject, and sender
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setFrom("SmartSteer@outlook.com");
 
-        // for thymeleaf template
+        //for thymeleaf template
         Context context = new Context();
         context.setVariable("firstName", firstName);
         // Render email template with thymeleaf

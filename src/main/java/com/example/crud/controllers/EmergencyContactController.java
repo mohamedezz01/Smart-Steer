@@ -80,8 +80,11 @@ public class EmergencyContactController {
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-        emergencyContactService.notifyUserIfEmailExists(contact.getEmail(),user.getFirstName(),user.getPhone());
-
+        emergencyContactService.notifyUserIfEmailExists(
+                contact.getEmail(),
+                user.getFirstName(),
+                user.getPhone()
+        );
         contact.setUser(user);
         EmergencyContact savedContact = emergencyContactService.addContact(contact);
         response.put("message", "Emergency contact added successfully.");

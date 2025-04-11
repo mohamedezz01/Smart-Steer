@@ -54,21 +54,11 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
 
     @Override
     public void notifyUserIfEmailExists(String email, String addedByName, String addedByPhone) {
-        User existingUser = userService.findByEmail(email);
-        if (existingUser != null && existingUser.getEmail() != null) {
-            try {
-                emailService.Sendnotify(
-                        existingUser.getEmail(),
-                        existingUser.getFirstName(),
-                        addedByName,
-                        addedByPhone,
-                        email
-                );
-            } catch (MessagingException e) {
-                log.error("Failed to send email to: {}", existingUser.getEmail(), e);
-            }
-        } else {
-            log.warn("User found but email is missing: {}", email);
+        try {
+            emailService.Sendnotify(
+                    email, "User", addedByName, addedByPhone, email);
+        } catch (MessagingException e) {
+            log.error("Failed to send email to: {}", email, e);
         }
     }
 

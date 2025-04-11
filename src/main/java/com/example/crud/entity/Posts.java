@@ -45,7 +45,7 @@ public class Posts {
     private byte[] profilePic;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
+
     private List<Comments> comments;
 
     @OneToMany(
@@ -54,7 +54,6 @@ public class Posts {
             orphanRemoval = true,
             fetch = FetchType.EAGER
     )
-    @JsonIgnore
     private List<Likes> likes;
 
 }
