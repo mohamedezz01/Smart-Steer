@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Smart Steer - EMERGENCY ALERT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            margin: 0 auto;
+            max-width: 600px;
+            padding: 20px;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            /* Changed background color to red for urgency */
+            background-color: #dc3545; /* Red color */
+            color: #ffffff;
+            padding: 15px; /* Slightly more padding */
+            text-align: center;
+            font-size: 22px; /* Slightly larger font */
+            font-weight: bold;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .message {
+            font-size: 16px;
+            line-height: 1.6; /* Improved readability */
+            margin: 20px 0;
+        }
+        .highlight {
+            color: #dc3545; /* Red color for emphasis */
+            font-weight: bold;
+        }
+        .location-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+        }
+        .logo {
+            display: block;
+            margin: 20px auto; /* Center the logo */
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        ! EMERGENCY ALERT !
+    </div>
+    <h3>Dear [[${firstName}]],</h3>
+    <p class="message">
+        This is an <strong class="highlight">URGENT</strong> notification from the Smart Steer system.
+    </p>
+    <p class="message">
+        An emergency event involving <strong>[[${userName}]]</strong> has been detected.
+    </p>
+    <ul>
+        <li><strong>Event Type:</strong> [[${emergencyType}]]</li> <li><strong>Time Detected:</strong> Approximately [[${emergencyTime}]]</li> </ul>
+
+    <div th:if="${locationLink != null}">
+        <p><strong>Last Known Location:</strong></p>
+        <a th:href="${locationLink}" class="location-link" target="_blank">View Location Map</a>
+        <p style="font-size: 12px; color: #666;">(Location accuracy may vary based on GPS signal)</p>
+    </div>
+    <div th:if="${locationInfo != null and locationLink == null}">
+        <p><strong>Last Known Location Info:</strong> [[${locationInfo}]]</p>
+        <p style="font-size: 12px; color: #666;">(Location accuracy may vary based on GPS signal)</p>
+    </div>
+
+
+    <p class="message">
+        <strong class="highlight">Please attempt to contact [[${userName}]] immediately to verify their status and offer assistance.</strong>
+    </p>
+    <p>
+        This alert was generated automatically by the Smart Steer system. Please take appropriate action based on this information.
+    </p>
+
+    <img src="https://i.imgur.com/Amln0C4.jpeg" width="450" height="250" alt="Smart Steer Logo" class="logo">
+
+    <p class="footer">
+        Sent by the Smart Steer Automated System.<br>
+        <strong>Smart Steer Team</strong>
+    </p>
+</div>
+</body>
+</html>
