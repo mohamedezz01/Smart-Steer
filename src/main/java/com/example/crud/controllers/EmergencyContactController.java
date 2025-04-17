@@ -146,47 +146,56 @@ public class EmergencyContactController {
     }
 
     //update an existing emergency contact
+
     @PutMapping("/update/{contactId}")
     public ResponseEntity<Map<String, Object>> updateEmergencyContact(
             @PathVariable int contactId, @RequestBody EmergencyContact updatedContact, @RequestHeader("Authorization") String authHeader) {
+
         Map<String, Object> response = new HashMap<>();
 
-        //validate the Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.put("message", "Authorization header missing or invalid.");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
-        // Extract the token and username
         String token = authHeader.replace("Bearer ", "");
         String email = jwtUtil.extractEmail(token);
-
         User user = userService.findByEmail(email);
+
         if (user == null) {
             response.put("message", "User not found.");
             response.put("status", HttpStatus.UNAUTHORIZED.value());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
-        //find and validate the existing contact
+
         EmergencyContact existingContact = emergencyContactService.findById(contactId);
+
         if (existingContact == null || existingContact.getUser().getId() != user.getId()) {
             response.put("message", "Emergency contact not found or access denied.");
             response.put("status", HttpStatus.NOT_FOUND.value());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
-        boolean contactExists = emergencyContactService.existsByPhoneAndUser(existingContact.getPhone(), user);
+
+        boolean contactExists = emergencyContactService.existsByPhoneAndUser(updatedContact.getPhone(), user) &&
+                !existingContact.getPhone().equals(updatedContact.getPhone());
+
+
         if (contactExists) {
             response.put("message", "A contact with the same phone number already exists");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+
         if(Objects.equals(existingContact.getPhone(), user.getPhone())){
             response.put("message", "You can't use your profile number as a new contact. Please enter a different one");
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-        boolean emailExists=emergencyContactService.existsByEmailAndUser(existingContact.getEmail(),user);
+
+        boolean emailExists = emergencyContactService.existsByEmailAndUser(updatedContact.getEmail(), user) &&
+                !existingContact.getEmail().equals(updatedContact.getEmail());
+
         if (emailExists) {
             response.put("message", "A contact with the same email already exists");
             response.put("status", HttpStatus.BAD_REQUEST.value());
@@ -198,8 +207,14 @@ public class EmergencyContactController {
             response.put("status", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-        emergencyContactService.notifyUserIfEmailExists(existingContact.getPhone(),user.getFirstName(),user.getPhone());
-        // Update fields and save the contact
+        if (!existingContact.getEmail().equals(updatedContact.getEmail())) {
+            emergencyContactService.notifyUserIfEmailExists(
+                    updatedContact.getPhone(),
+                    user.getFirstName(),
+                    user.getPhone()
+            );
+        }
+
         existingContact.setName(updatedContact.getName());
         existingContact.setPhone(updatedContact.getPhone());
         EmergencyContact savedContact = emergencyContactService.addContact(existingContact);
@@ -211,7 +226,6 @@ public class EmergencyContactController {
                 "email",savedContact.getEmail()
         ));
         response.put("status", HttpStatus.OK.value());
-
         return ResponseEntity.ok(response);
     }
 
