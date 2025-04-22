@@ -1,5 +1,6 @@
 package com.example.crud.controllers;
 
+import com.example.crud.dto.FcmTokenDTO;
 import com.example.crud.dto.ResetPasswordRequest;
 import com.example.crud.dto.UserDTO;
 import com.example.crud.entity.User;
@@ -298,7 +299,23 @@ public class UserRestController {
         response.put("message", "A new verification code has been sent to your email");
         return ResponseEntity.ok(response);
     }
+    @PostMapping("/fcm-token")
+    public ResponseEntity<String> saveFcmToken(@RequestHeader("Authorization") String authHeader,
+                                               @RequestBody FcmTokenDTO dto) {
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtil.extractEmail(token);
 
+        User user = userService.findByEmail(email);
+
+        if (user == null) {
+            return ResponseEntity.status(401).body("User not found");
+        }
+
+        user.setFcm_token(dto.getFcmToken());
+        userService.save(user);
+
+        return ResponseEntity.ok("FCM token saved successfully");
+    }
     /////////////////////////////////////ADMIN/////////////////////////////////////
 
     @GetMapping("/admin/users")

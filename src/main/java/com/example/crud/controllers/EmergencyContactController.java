@@ -1,5 +1,7 @@
 package com.example.crud.controllers;
 
+import com.example.crud.dao.EmergencyContactRepository;
+import com.example.crud.dto.LocationDTO;
 import com.example.crud.entity.EmergencyContact;
 import com.example.crud.entity.User;
 import com.example.crud.service.EmailServ;
@@ -22,13 +24,15 @@ public class EmergencyContactController {
     private final JwtUtil jwtUtil;
     @Autowired
     private EmailServ emailService;
-
     @Autowired
-    public EmergencyContactController(EmergencyContactService emergencyContactService, UserService userService, JwtUtil jwtUtil, EmailServ emailService) {
+    private EmergencyContactRepository emergencyContactRepository;
+    @Autowired
+    public EmergencyContactController(EmergencyContactService emergencyContactService, UserService userService, JwtUtil jwtUtil, EmailServ emailService,EmergencyContactRepository emergencyContactRepository) {
         this.emergencyContactService = emergencyContactService;
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.emailService = emailService;
+        this.emergencyContactRepository=emergencyContactRepository;
     }
 
     //add a new emergency contact
@@ -268,4 +272,23 @@ public class EmergencyContactController {
         response.put("status", HttpStatus.OK.value());
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/location")
+    public ResponseEntity<String> handleEmergencyLocation(
+            @RequestHeader("Authorization") String token,@RequestBody LocationDTO locationDTO) {
+        String jwt = token.replace("Bearer ", "");
+        String email = jwtUtil.extractEmail(jwt);
+        User user = userService.findByEmail(email);
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid user");
+        }
+
+        List<EmergencyContact> contacts = emergencyContactRepository.findByUser(user);
+        String mapLink = "https://maps.google.com/?q=" + locationDTO.getLat() + "," + locationDTO.getLng();
+
+        emailService.sendEmergencyEmails(user, contacts, mapLink);
+        return ResponseEntity.ok("Location received and emails sent.");
+    }
+
 }
