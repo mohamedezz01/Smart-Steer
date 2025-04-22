@@ -84,8 +84,12 @@ public class TechController {
     }
 
     @GetMapping("/posts")
-    public ResponseEntity<?> getAllPosts() {
-        List<PostResponse> response = postService.getAllPostsAsDTO();
+    public ResponseEntity<?> getAllPosts(   @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
+        String email = jwtUtil.extractEmail(token);
+        User user = userService.findByEmail(email);
+        int userId=user.getId();
+        List<PostResponse> response = postService.getAllPostsAsDTO(userId);
         return ResponseEntity.ok(response);
     }
 

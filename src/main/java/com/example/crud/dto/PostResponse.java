@@ -19,4 +19,5 @@ public class PostResponse {
     private String profilePictureUrl;
     private int likeCount;
     private List<String> likedByUsernames;
+    private boolean isPostLikedByUser;
 }

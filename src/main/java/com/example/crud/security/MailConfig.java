@@ -14,7 +14,7 @@ public class MailConfig {
     public JavaMailSender mailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost("smtp-relay.brevo.com");
-        mailSender.setPort(587); // or 465 for SSL
+        mailSender.setPort(587);
         mailSender.setUsername("7e4736002@smtp-brevo.com");
         mailSender.setPassword("ODI5swcGZkXMRqxa");
 

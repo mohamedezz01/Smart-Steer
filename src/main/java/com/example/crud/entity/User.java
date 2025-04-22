@@ -83,6 +83,9 @@ public class User {
     @Column(name = "roles")
     private String roles;
 
+    @Column(name="fcm_token")
+    private String fcm_token;
+
     public enum Gender {
         MALE, FEMALE
     }

@@ -1,6 +1,9 @@
 package com.example.crud.service;
 
 
+import com.example.crud.dto.LocationDTO;
+import com.example.crud.entity.EmergencyContact;
+import com.example.crud.entity.User;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +14,9 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import java.util.Date;
+import java.util.List;
+
 
 @Service
 public class EmailService implements EmailServ {
@@ -18,7 +24,6 @@ public class EmailService implements EmailServ {
 
     private JavaMailSender mailSender;
     private SpringTemplateEngine templateEngine;
-
     @Autowired
     public EmailService( JavaMailSender mailSender, SpringTemplateEngine templateEngine) {
         this.mailSender = mailSender;
@@ -150,6 +155,29 @@ public class EmailService implements EmailServ {
         mailSender.send(message);
     }
 
+    public void sendEmergencyEmails(User user, List<EmergencyContact> contacts, String location) {
+        for (EmergencyContact contact : contacts) {
+            try {
+                Context context = new Context();
+                context.setVariable("firstName", contact.getName());
+                context.setVariable("userName", user.getFirstName() + " " + user.getLastName());
+                context.setVariable("locationLink", location);
 
+                String htmlContent = templateEngine.process("emergency.html", context);
+
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true);
+                helper.setTo(contact.getEmail());
+                helper.setSubject("🚨 EMERGENCY ALERT - Smart Steer 🚨");
+                helper.setFrom("SmartSteer@outlook.com");
+                helper.setText(htmlContent, true);
+                mailSender.send(message);
+
+                System.out.println("Email sent to " + contact.getEmail());
+            } catch (MessagingException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }
 

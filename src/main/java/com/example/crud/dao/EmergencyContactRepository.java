@@ -13,5 +13,5 @@ public interface EmergencyContactRepository extends JpaRepository<EmergencyConta
 
         boolean existsByPhoneAndUser(String phone, User user);
     boolean existsByEmailAndUser(String email, User user);
-
+    List<EmergencyContact> findByUser(User user);
 }

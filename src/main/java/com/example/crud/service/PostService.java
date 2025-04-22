@@ -4,6 +4,7 @@ import com.example.crud.dto.PostResponse;
 import com.example.crud.entity.Likes;
 import com.example.crud.entity.Posts;
 import com.example.crud.dao.PostRepository;
+import com.example.crud.dao.LikeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,9 +22,12 @@ public class PostService {
     @Autowired
     private PostRepository postRepository;
 
-    @Cacheable(value = "allPostsDTO")
+    @Autowired
+    private LikeRepository likeRepository;
+
+    @Cacheable(value = "allPostsDTO", key = "#userId")
     @Transactional(readOnly = true)
-    public List<PostResponse> getAllPostsAsDTO() {
+    public List<PostResponse> getAllPostsAsDTO(int userId) {
         List<Posts> posts = postRepository.findAll();
 
         return posts.stream().map(post -> {
@@ -42,15 +46,21 @@ public class PostService {
 
             List<Likes> likesForPost = post.getLikes();
             dto.setLikeCount(likesForPost != null ? likesForPost.size() : 0);
+
             List<String> likedByUsernames = likesForPost != null ?
                     likesForPost.stream()
-                            .filter(like -> like.getUser() != null) //null checks
+                            .filter(like -> like.getUser() != null)
                             .map(like -> like.getUser().getUsername())
                             .collect(Collectors.toList()) : Collections.emptyList();
             dto.setLikedByUsernames(likedByUsernames);
+
+            boolean isLikedByUser = likeRepository.findByPostIdAndUserId(post.getId(), userId).isPresent();
+            dto.setPostLikedByUser(isLikedByUser);
+
             return dto;
         }).collect(Collectors.toList());
     }
+
     @Transactional(readOnly = true)
     public Optional<Posts> getPostById(int id) {
         return postRepository.findById(id);
@@ -73,5 +83,4 @@ public class PostService {
     public Posts createPost(Posts post) {
         return postRepository.save(post);
     }
-
 }
