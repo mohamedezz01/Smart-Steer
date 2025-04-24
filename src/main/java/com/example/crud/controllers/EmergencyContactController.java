@@ -306,8 +306,8 @@ public class EmergencyContactController {
 
         notificationService.sendEmergencyNotification(
                 user.getFcm_token(),
-                "Emergency Detected!",
-                "We detected a possible accident. Sending help!"
+                "🚨 EMERGENCY DETECTED 🚨",
+                "Potential accident detected. Dispatching assistance to your location now."
         );
 
         return ResponseEntity.ok("Emergency notification sent.");
