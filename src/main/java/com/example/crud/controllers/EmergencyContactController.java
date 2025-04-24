@@ -6,8 +6,10 @@ import com.example.crud.entity.EmergencyContact;
 import com.example.crud.entity.User;
 import com.example.crud.service.EmailServ;
 import com.example.crud.service.EmergencyContactService;
+import com.example.crud.service.NotificationService;
 import com.example.crud.service.UserService;
 import com.example.crud.util.JwtUtil;
+import com.google.firebase.messaging.FirebaseMessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,13 +28,15 @@ public class EmergencyContactController {
     private EmailServ emailService;
     @Autowired
     private EmergencyContactRepository emergencyContactRepository;
+    private NotificationService notificationService;
     @Autowired
-    public EmergencyContactController(EmergencyContactService emergencyContactService, UserService userService, JwtUtil jwtUtil, EmailServ emailService,EmergencyContactRepository emergencyContactRepository) {
+    public EmergencyContactController(EmergencyContactService emergencyContactService, UserService userService, JwtUtil jwtUtil, EmailServ emailService,EmergencyContactRepository emergencyContactRepository,NotificationService notificationService) {
         this.emergencyContactService = emergencyContactService;
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.emailService = emailService;
         this.emergencyContactRepository=emergencyContactRepository;
+        this.notificationService=notificationService;
     }
 
     //add a new emergency contact
@@ -290,5 +294,22 @@ public class EmergencyContactController {
         emailService.sendEmergencyEmails(user, contacts, mapLink);
         return ResponseEntity.ok("Location received and emails sent.");
     }
+    @PostMapping("/alert")
+    public ResponseEntity<String> sendEmergencyNotification(@RequestHeader("Authorization") String authHeader) throws FirebaseMessagingException {
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtil.extractEmail(token);
+        User user = userService.findByEmail(email);
 
+        if (user == null || user.getFcm_token() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found or FCM token missing.");
+        }
+
+        notificationService.sendEmergencyNotification(
+                user.getFcm_token(),
+                "Emergency Detected!",
+                "We detected a possible accident. Sending help!"
+        );
+
+        return ResponseEntity.ok("Emergency notification sent.");
+    }
 }
