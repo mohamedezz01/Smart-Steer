@@ -7,15 +7,17 @@ import org.springframework.stereotype.Service;
 public class NotificationService {
 
     public void sendEmergencyNotification(String fcmToken, String title, String body) throws FirebaseMessagingException {
+        Notification notification = Notification.builder()
+                .setTitle(title)
+                .setBody(body)
+                .build();
+
         Message message = Message.builder()
-                .putData("type", "emergency")
-                .putData("title", title)
-                .putData("body", body)
                 .setToken(fcmToken)
+                .setNotification(notification)
                 .build();
 
         String response = FirebaseMessaging.getInstance().send(message);
         System.out.println("Notification sent. Response: " + response);
     }
-
 }
