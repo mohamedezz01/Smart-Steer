@@ -9,21 +9,21 @@ import java.util.Map;
 @Service
 public class NotificationService {
 
-    public void sendEmergencyNotification(String fcmToken, String title, String body) throws FirebaseMessagingException {
-        Map<String, String> data = new HashMap<>();
-        data.put("type", "accident");
+    public void sendEmergencyNotification(String fcmToken, String title, String body, Map<String, String> data) throws FirebaseMessagingException {
+        Notification notification = Notification.builder()
+                .setTitle(title)
+                .setBody(body)
+                .build();
 
         Message message = Message.builder()
                 .setToken(fcmToken)
-                .putAllData(data)
-                .setNotification(Notification.builder()
-                        .setTitle(title)
-                        .setBody(body)
-                        .build()
-                )
+                .setNotification(notification)
+                .putAllData(data) // attaching data
                 .build();
+
         String response = FirebaseMessaging.getInstance().send(message);
         System.out.println("Notification sent. Response: " + response);
     }
+
 
 }
