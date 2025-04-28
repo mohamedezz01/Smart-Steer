@@ -304,13 +304,9 @@ public class EmergencyContactController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found or FCM token missing.");
         }
         Map<String, String> data = new HashMap<>();
-        data.put("type","accident");
+        data.put("type", "accident");
 
-        notificationService.sendEmergencyNotification(
-                user.getFcm_token(),
-                "🚨 EMERGENCY DETECTED 🚨",
-                "Potential accident detected. Dispatching assistance to your location now."
-        );
+        notificationService.sendEmergencyNotification(user.getFcm_token(), data);
 
         return ResponseEntity.ok("Emergency notification sent.");
     }
