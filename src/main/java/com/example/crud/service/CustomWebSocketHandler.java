@@ -86,15 +86,15 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
                 session.sendMessage(new TextMessage("FCM token saved."));
                 System.out.println("FCM token saved for user: " + user.getEmail());
             }
-        } else if ("accident".equalsIgnoreCase(type)) {
-            if (user != null && user.getFcm_token() != null) {
-                notificationService.sendEmergencyNotification(
-                        user.getFcm_token(),
-                        "🚨 Emergency Detected!",
-                        "We detected a possible accident. Sending help!"
-                );
-                session.sendMessage(new TextMessage("Emergency notification sent."));
-            }
+//        } else if ("accident".equalsIgnoreCase(type)) {
+//            if (user != null && user.getFcm_token() != null) {
+//                notificationService.sendEmergencyNotification(
+//                        user.getFcm_token(),
+//                        "🚨 Emergency Detected!",
+//                        "We detected a possible accident. Sending help!"
+//                );
+//                session.sendMessage(new TextMessage("Emergency notification sent."));
+//            }
         } else if ("location".equalsIgnoreCase(type)) {
             Double lat = (Double) payload.get("lat");
             Double lng = (Double) payload.get("lng");
