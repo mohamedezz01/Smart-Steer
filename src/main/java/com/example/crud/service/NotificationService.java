@@ -24,6 +24,4 @@ public class NotificationService {
         String response = FirebaseMessaging.getInstance().send(message);
         System.out.println("Notification sent. Response: " + response);
     }
-
-
 }

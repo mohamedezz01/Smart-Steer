@@ -11,14 +11,12 @@ import java.util.Optional;
 
 @Service
 public class LikeService {
+
     @Autowired
     private LikeRepository likeRepository;
 
     @Autowired
     private CacheManager cacheManager;
-
-    @Autowired
-    private PostService postService; // Add this
 
     @Transactional
     public Likes addLike(Likes like) {
@@ -31,7 +29,7 @@ public class LikeService {
         }
 
         Likes savedLike = likeRepository.save(like);
-        evictLikeAndPostCaches(postId, userId); // Updated method
+        evictLikeAndPostCaches(postId, userId);
         return savedLike;
     }
 
@@ -40,7 +38,7 @@ public class LikeService {
         Optional<Likes> like = likeRepository.findByPostIdAndUserId(postId, userId);
         if (like.isPresent()) {
             likeRepository.delete(like.get());
-            evictLikeAndPostCaches(postId, userId); // Updated method
+            evictLikeAndPostCaches(postId, userId);
         }
     }
 
@@ -49,21 +47,24 @@ public class LikeService {
         if (cacheManager.getCache("likeCount") != null) {
             cacheManager.getCache("likeCount").evict(postId);
         }
+
         if (cacheManager.getCache("userLikeStatus") != null) {
             cacheManager.getCache("userLikeStatus").evict(postId + "-" + userId);
         }
 
-        // Evict post-related caches
+        // Evict only the current user's post DTO cache
         if (cacheManager.getCache("allPostsDTO") != null) {
-            cacheManager.getCache("allPostsDTO").clear();
-        }
-        if (cacheManager.getCache("allPosts") != null) {
-            cacheManager.getCache("allPosts").clear();
+            cacheManager.getCache("allPostsDTO").evict(userId);
         }
 
         // Optional: Evict specific post cache if you have one
         if (cacheManager.getCache("post") != null) {
             cacheManager.getCache("post").evict(postId);
+        }
+
+        // Optional: If you also cache all posts or admin posts
+        if (cacheManager.getCache("allPosts") != null) {
+            cacheManager.getCache("allPosts").evict(postId);
         }
     }
 }

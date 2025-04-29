@@ -18,23 +18,22 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         .header {
-            /* Changed background color to red for urgency */
-            background-color: #dc3545; /* Red color */
+            background-color: #dc3545;
             color: #ffffff;
-            padding: 15px; /* Slightly more padding */
+            padding: 15px;
             text-align: center;
-            font-size: 22px; /* Slightly larger font */
+            font-size: 22px;
             font-weight: bold;
             border-top-left-radius: 10px;
             border-top-right-radius: 10px;
         }
         .message {
             font-size: 16px;
-            line-height: 1.6; /* Improved readability */
+            line-height: 1.6;
             margin: 20px 0;
         }
         .highlight {
-            color: #dc3545; /* Red color for emphasis */
+            color: #dc3545;
             font-weight: bold;
         }
         .location-link {
@@ -55,14 +54,14 @@
         }
         .logo {
             display: block;
-            margin: 20px auto; /* Center the logo */
+            margin: 20px auto;
         }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        ! EMERGENCY ALERT !
+        EMERGENCY ALERT
     </div>
     <h3>Dear [[${firstName}]],</h3>
     <p class="message">
@@ -72,7 +71,7 @@
         An emergency event involving <strong>[[${userName}]]</strong> has been detected.
     </p>
     <ul>
-        <li><strong>Event Type:</strong> [[${emergencyType}]]</li> <li><strong>Time Detected:</strong> Approximately [[${emergencyTime}]]</li> </ul>
+    <li><strong>Time Detected:</strong> Approximately [[${emergencyTime}]]</li> </ul>
 
     <div th:if="${locationLink != null}">
         <p><strong>Last Known Location:</strong></p>
