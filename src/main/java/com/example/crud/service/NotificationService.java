@@ -24,4 +24,15 @@ public class NotificationService {
         String response = FirebaseMessaging.getInstance().send(message);
         System.out.println("Notification sent. Response: " + response);
     }
+
+    public void sendDataNotification(String fcmToken, Map<String, String> data) throws FirebaseMessagingException {
+        Message message = Message.builder()
+                .setToken(fcmToken)
+                .putAllData(data)
+                .build();
+
+        String response = FirebaseMessaging.getInstance().send(message);
+        System.out.println("Notification sent. Response: " + response);
+    }
+
 }

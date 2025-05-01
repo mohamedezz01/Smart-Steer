@@ -294,6 +294,7 @@ public class EmergencyContactController {
         emailService.sendEmergencyEmails(user, contacts, mapLink);
         return ResponseEntity.ok("Location received and emails sent.");
     }
+
     @PostMapping("/alert")
     public ResponseEntity<String> sendEmergencyNotification(@RequestHeader("Authorization") String authHeader) throws FirebaseMessagingException {
         String token = authHeader.replace("Bearer ", "");
@@ -306,14 +307,14 @@ public class EmergencyContactController {
         Map<String, String> data = new HashMap<>();
         data.put("type", "accident");
 
-        // Updated notificationService method that accepts data
-        notificationService.sendEmergencyNotification(
-                user.getFcm_token(),
-                "🚨 EMERGENCY DETECTED 🚨",
-                "Potential accident detected. Dispatching assistance to your location now.",
-                data  // passing the data
-        );
+//        notificationService.sendEmergencyNotification(
+//                user.getFcm_token(),
+//                "🚨 EMERGENCY DETECTED 🚨",
+//                "Potential accident detected. Dispatching assistance to your location now.",
+//                data
+//        );
 
+        notificationService.sendDataNotification(user.getFcm_token(),data);
         return ResponseEntity.ok("Emergency notification sent.");
     }
 }
