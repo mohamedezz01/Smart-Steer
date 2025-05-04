@@ -230,9 +230,9 @@ public class TechController {
         String token = authHeader.replace("Bearer ", "");
         String email = jwtUtil.extractEmail(token);
         User user = userService.findByEmail(email);
-
+        int userId=user.getId();
         likeService.removeLike(postId, user.getId());
-
+        System.out.println("Trying to remove like for postId=" + postId + ", userId=" + userId);
         Map<String, String> response = new HashMap<>();
         response.put("message", "Post unliked successfully");
         return ResponseEntity.ok(response);

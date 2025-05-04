@@ -52,8 +52,9 @@ public class Posts {
             mappedBy = "post",
             cascade = CascadeType.ALL,
             orphanRemoval = true,
-            fetch = FetchType.EAGER
+            fetch = FetchType.LAZY
     )
+    @JsonIgnore
     private List<Likes> likes;
 
 }

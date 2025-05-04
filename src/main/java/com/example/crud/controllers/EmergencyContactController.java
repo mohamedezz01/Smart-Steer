@@ -317,4 +317,4 @@ public class EmergencyContactController {
         notificationService.sendDataNotification(user.getFcm_token(),data);
         return ResponseEntity.ok("Emergency notification sent.");
     }
-}
+}   

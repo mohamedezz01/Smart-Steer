@@ -12,5 +12,5 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LikeRequestDTO {
     private int postId;
-    private int userId;
+//    private int userId;
 }
