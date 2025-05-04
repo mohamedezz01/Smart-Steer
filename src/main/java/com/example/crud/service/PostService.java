@@ -40,8 +40,9 @@ public class PostService {
 
             if (post.getAdmin() != null) {
                 dto.setUserName(post.getAdmin().getUsername());
-                dto.setProfilePic(post.getAdmin().getProfilePicture());
-                dto.setProfilePictureUrl("/profilePicture?userId=" + post.getAdmin().getId());
+             //   dto.setProfilePic(post.getAdmin().getProfilePicture());
+                String baseUrl = "https://smart-steer-production.up.railway.app";
+                dto.setProfilePictureUrl(baseUrl + "/profilePicture?userId=" + post.getAdmin().getId());
             }
 
             List<Likes> likesForPost = post.getLikes();
