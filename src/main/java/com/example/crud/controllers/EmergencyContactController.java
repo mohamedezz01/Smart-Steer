@@ -1,6 +1,7 @@
 package com.example.crud.controllers;
 
 import com.example.crud.dao.EmergencyContactRepository;
+import com.example.crud.dto.LastEmergencyUserHolder;
 import com.example.crud.dto.LocationDTO;
 import com.example.crud.entity.EmergencyContact;
 import com.example.crud.entity.User;
@@ -283,16 +284,15 @@ public class EmergencyContactController {
     @PostMapping("/location")
     public ResponseEntity<String> handleEmergencyLocation(@RequestBody LocationDTO locationDTO) {
 
-        Integer userId = tempUserCache.getIfPresent(locationDTO.getTempKey());
+        Integer userId = LastEmergencyUserHolder.getUserId();
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired session");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No active emergency user found");
         }
 
         User user = userService.findById(userId);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
         }
-
         System.out.println(user.getId());
         List<EmergencyContact> contacts = emergencyContactRepository.findByUser(user);
         String mapLink = "https://maps.google.com/?q=" + locationDTO.getLat() + "," + locationDTO.getLng();
@@ -311,12 +311,11 @@ public class EmergencyContactController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found or FCM token missing.");
         }
 
-        String tempKey = UUID.randomUUID().toString();
-        tempUserCache.put(tempKey, user.getId()); // Store userId
 
         Map<String, String> data = new HashMap<>();
         data.put("type", "accident");
-        data.put("tempKey", tempKey); // App will send this back in /location
+
+        LastEmergencyUserHolder.setUserId(user.getId());
 
         notificationService.sendDataNotification(user.getFcmToken(), data);
 
