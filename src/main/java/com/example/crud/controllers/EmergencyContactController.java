@@ -282,7 +282,7 @@ public class EmergencyContactController {
 
         String fcmToken = locationDTO.getFcmToken();
         User user = userService.findByFcmToken(fcmToken);
-
+        System.out.println(user.getId());
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid user");
         }
