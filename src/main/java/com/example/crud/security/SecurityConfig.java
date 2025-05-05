@@ -60,7 +60,8 @@ public class SecurityConfig {
 
                                 .requestMatchers(HttpMethod.POST,
                                         "/GP/emergency/add",
-                                                "GP/emergency/alert"
+                                                "GP/emergency/alert",
+                                              "GP/emergency/location"
                                 ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN", "ROLE_OWNER")
 
                                 .requestMatchers(HttpMethod.GET,
