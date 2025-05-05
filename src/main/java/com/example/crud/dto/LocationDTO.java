@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LocationDTO {
-
+    private String fcmToken;
     private double lat;
     private double lng;
 

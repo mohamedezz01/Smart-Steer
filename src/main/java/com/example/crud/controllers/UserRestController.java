@@ -311,7 +311,7 @@ public class UserRestController {
             return ResponseEntity.status(401).body("User not found");
         }
 
-        user.setFcm_token(dto.getFcmToken());
+        user.setFcmToken(dto.getFcmToken());
         userService.save(user);
 
         return ResponseEntity.ok("FCM token saved successfully");

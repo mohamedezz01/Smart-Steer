@@ -278,11 +278,10 @@ public class EmergencyContactController {
     }
 
     @PostMapping("/location")
-    public ResponseEntity<String> handleEmergencyLocation(
-            @RequestHeader("Authorization") String token,@RequestBody LocationDTO locationDTO) {
-        String jwt = token.replace("Bearer ", "");
-        String email = jwtUtil.extractEmail(jwt);
-        User user = userService.findByEmail(email);
+    public ResponseEntity<String> handleEmergencyLocation(@RequestBody LocationDTO locationDTO) {
+
+        String fcmToken = locationDTO.getFcmToken();
+        User user = userService.findByFcmToken(fcmToken);
 
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid user");
@@ -301,20 +300,20 @@ public class EmergencyContactController {
         String email = jwtUtil.extractEmail(token);
         User user = userService.findByEmail(email);
 
-        if (user == null || user.getFcm_token() == null) {
+        if (user == null || user.getFcmToken() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found or FCM token missing.");
         }
         Map<String, String> data = new HashMap<>();
         data.put("type", "accident");
 
         notificationService.sendEmergencyNotification(
-                user.getFcm_token(),
+                user.getFcmToken(),
                 "🚨 EMERGENCY DETECTED 🚨",
                 "Sending assistance to your location now",
                 data
         );
 
-        notificationService.sendDataNotification(user.getFcm_token(),data);
+        notificationService.sendDataNotification(user.getFcmToken(),data);
         return ResponseEntity.ok("Emergency notification sent.");
     }
 }   

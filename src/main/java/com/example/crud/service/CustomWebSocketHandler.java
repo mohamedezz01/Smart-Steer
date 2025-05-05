@@ -81,7 +81,7 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
         if ("fcm_token".equalsIgnoreCase(type)) {
             String token = (String) payload.get("token");
             if (user != null && token != null) {
-                user.setFcm_token(token);
+                user.setFcmToken(token);
                 userService.save(user);
                 session.sendMessage(new TextMessage("FCM token saved."));
                 System.out.println("FCM token saved for user: " + user.getEmail());

@@ -154,7 +154,10 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByResetToken(resetToken);
     }
 
-
+    @Override
+    public User findByFcmToken(String fcmToken) {
+        return userRepository.findByFcmToken(fcmToken);
+    }
     @Caching(evict = {
             @CacheEvict(value = "user", key = "#userId"),
             @CacheEvict(value = {"userList", "userDTOList"}, allEntries = true)
