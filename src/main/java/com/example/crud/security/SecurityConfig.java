@@ -67,7 +67,8 @@ public class SecurityConfig {
                                         "/GP/users/**",
                                         "/GP/emergency/list",
                                         "/GP/settings/email",
-                                        "/GP/settings/profilePicture"
+                                        "/GP/settings/profilePicture",
+                                        "/GP/tech/profilePicture/byPost"
                                 ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
 
                                 .requestMatchers(HttpMethod.PUT,
