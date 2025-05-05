@@ -12,10 +12,10 @@ import java.util.List;
 public class PostResponse {
     private int id;
     private String content;
-    private Date createdAt;
+ //   private Date createdAt;
     private String imageUrl;
     private String userName;
-    private byte[] profilePic;
+   // private byte[] profilePic;
     private String profilePictureUrl;
     private int likeCount;
     private List<String> likedByUsernames;

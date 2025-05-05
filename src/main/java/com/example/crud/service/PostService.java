@@ -35,7 +35,7 @@ public class PostService {
 
             dto.setId(post.getId());
             dto.setContent(post.getContent());
-            dto.setCreatedAt(post.getCreatedAt());
+          //  dto.setCreatedAt(post.getCreatedAt());
             dto.setImageUrl(post.getImageUrl());
 
             if (post.getAdmin() != null) {

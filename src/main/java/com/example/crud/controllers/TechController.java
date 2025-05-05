@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/GP/tech")
@@ -232,7 +233,6 @@ public class TechController {
         User user = userService.findByEmail(email);
         int userId=user.getId();
         likeService.removeLike(postId, user.getId());
-        System.out.println("Trying to remove like for postId=" + postId + ", userId=" + userId);
         Map<String, String> response = new HashMap<>();
         response.put("message", "Post unliked successfully");
         return ResponseEntity.ok(response);
@@ -274,7 +274,6 @@ public class TechController {
         return ResponseEntity.ok(response);
     }
 
-
     @GetMapping("/comments/post/{postId}")
     public ResponseEntity<?> getCommentsByPost(@PathVariable int postId) {
         List<Comments> comments = commentService.getCommentsByPostId(postId);
@@ -308,6 +307,27 @@ public class TechController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }
     }
+
+    @GetMapping(value = "/profilePicture/byPost", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<byte[]> getProfilePictureByPostId(@RequestParam("postId") int postId) {
+        Optional<Posts> postOptional = postService.getPostById(postId);
+        if (postOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        Posts post = postOptional.get();
+        User user = post.getAdmin();
+
+        if (user == null || user.getProfilePicture() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+           //     .cacheControl(CacheControl.maxAge(1, TimeUnit.HOURS).cachePublic())
+                .body(user.getProfilePicture());
+    }
+
 
     @GetMapping("/username")
     ResponseEntity<Map<String, Object>> getUsername(@RequestHeader("Authorization") String authHeader){
