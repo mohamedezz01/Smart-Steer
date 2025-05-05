@@ -38,7 +38,8 @@ public class SecurityConfig {
                                         "/GP/reset_password",
                                         "/GP/confirm_reset_code",
                                         "/GP/resendForgot",
-                                        "/GP/car/message"
+                                        "/GP/car/message",
+                                        "GP/emergency/location"
                                 ).permitAll()
 
                                 .requestMatchers(HttpMethod.GET, "/GP/admin/users").hasAuthority("ROLE_ADMIN")
@@ -60,8 +61,7 @@ public class SecurityConfig {
 
                                 .requestMatchers(HttpMethod.POST,
                                         "/GP/emergency/add",
-                                                "GP/emergency/alert",
-                                              "GP/emergency/location"
+                                                "GP/emergency/alert"
                                 ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN", "ROLE_OWNER")
 
                                 .requestMatchers(HttpMethod.GET,
