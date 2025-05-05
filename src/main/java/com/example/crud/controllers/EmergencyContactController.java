@@ -9,6 +9,7 @@ import com.example.crud.service.EmergencyContactService;
 import com.example.crud.service.NotificationService;
 import com.example.crud.service.UserService;
 import com.example.crud.util.JwtUtil;
+import com.github.benmanes.caffeine.cache.Cache;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,8 @@ public class EmergencyContactController {
     private final JwtUtil jwtUtil;
     @Autowired
     private EmailServ emailService;
+    @Autowired
+    private Cache<String, Integer> tempUserCache;
     @Autowired
     private EmergencyContactRepository emergencyContactRepository;
     private NotificationService notificationService;
@@ -280,10 +283,14 @@ public class EmergencyContactController {
     @PostMapping("/location")
     public ResponseEntity<String> handleEmergencyLocation(@RequestBody LocationDTO locationDTO) {
 
-        String fcmToken = locationDTO.getFcmToken();
-        User user = userService.findByFcmToken(fcmToken);
+        Integer userId = tempUserCache.getIfPresent(locationDTO.getTempKey());
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired session");
+        }
+
+        User user = userService.findById(userId);
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid user");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
         }
 
         System.out.println(user.getId());
@@ -303,8 +310,15 @@ public class EmergencyContactController {
         if (user == null || user.getFcmToken() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User not found or FCM token missing.");
         }
+
+        String tempKey = UUID.randomUUID().toString();
+        tempUserCache.put(tempKey, user.getId()); // Store userId
+
         Map<String, String> data = new HashMap<>();
         data.put("type", "accident");
+        data.put("tempKey", tempKey); // App will send this back in /location
+
+        notificationService.sendDataNotification(user.getFcmToken(), data);
 
         notificationService.sendEmergencyNotification(
                 user.getFcmToken(),
@@ -312,8 +326,6 @@ public class EmergencyContactController {
                 "Sending assistance to your location now",
                 data
         );
-
-        notificationService.sendDataNotification(user.getFcmToken(),data);
         return ResponseEntity.ok("Emergency notification sent.");
     }
 }   
