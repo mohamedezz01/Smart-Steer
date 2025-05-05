@@ -23,5 +23,5 @@ public interface UserService {
     public boolean isDeletionTokenValid(User user, String deletionToken);
     public List<UserDTO> findAllUsersWithSpecificData();
     User findByPhone(String phone);
-    public User findByFcmToken(String fcmToken);
+     User findByFcmToken(String fcmToken);
 }

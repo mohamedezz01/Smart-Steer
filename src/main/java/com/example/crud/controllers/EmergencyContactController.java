@@ -282,11 +282,11 @@ public class EmergencyContactController {
 
         String fcmToken = locationDTO.getFcmToken();
         User user = userService.findByFcmToken(fcmToken);
-        System.out.println(user.getId());
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid user");
         }
 
+        System.out.println(user.getId());
         List<EmergencyContact> contacts = emergencyContactRepository.findByUser(user);
         String mapLink = "https://maps.google.com/?q=" + locationDTO.getLat() + "," + locationDTO.getLng();
 
