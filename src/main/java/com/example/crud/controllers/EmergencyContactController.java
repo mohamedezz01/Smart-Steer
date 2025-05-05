@@ -307,12 +307,12 @@ public class EmergencyContactController {
         Map<String, String> data = new HashMap<>();
         data.put("type", "accident");
 
-//        notificationService.sendEmergencyNotification(
-//                user.getFcm_token(),
-//                "🚨 EMERGENCY DETECTED 🚨",
-//                "Potential accident detected. Dispatching assistance to your location now.",
-//                data
-//        );
+        notificationService.sendEmergencyNotification(
+                user.getFcm_token(),
+                "🚨 EMERGENCY DETECTED 🚨",
+                "Sending assistance to your location now",
+                data
+        );
 
         notificationService.sendDataNotification(user.getFcm_token(),data);
         return ResponseEntity.ok("Emergency notification sent.");
