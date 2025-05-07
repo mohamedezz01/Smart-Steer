@@ -37,11 +37,18 @@ public class SmsService {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
         try {
+            System.out.println("📤 Sending SMS to: " + to);
+            System.out.println("📨 Message: " + messageText);
             ResponseEntity<String> response = restTemplate.postForEntity(SMS_URL, request, String.class);
+            System.out.println("✅ SMS API Response Status: " + response.getStatusCode());
+            System.out.println("📄 SMS API Response Body: " + response.getBody());
+
             return response.getStatusCode().is2xxSuccessful();
         } catch (Exception ex) {
+            System.out.println("❌ SMS sending failed:");
             ex.printStackTrace();
             return false;
         }
     }
+
 }
