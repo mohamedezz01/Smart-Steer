@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Smart Steer - EMERGENCY ALERT</title>
+    <title>EMERGENCY ALERT</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -69,8 +69,6 @@
     <p class="message">
         An emergency event involving <strong>[[${userName}]]</strong> has been detected.
     </p>
-    <ul>
-    <li><strong>Time Detected:</strong> Approximately [[${emergencyTime}]]</li> </ul>
 
     <div th:if="${locationLink != null}">
         <p><strong>Last Known Location:</strong></p>
@@ -81,7 +79,6 @@
         <p><strong>Last Known Location Info:</strong> [[${locationInfo}]]</p>
         <p style="font-size: 12px; color: #666;">(Location accuracy may vary based on GPS signal)</p>
     </div>
-
 
     <p class="message">
         <strong class="highlight">Please attempt to contact [[${userName}]] immediately to verify their status and offer assistance.</strong>
