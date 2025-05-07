@@ -5,10 +5,7 @@ import com.example.crud.dto.LastEmergencyUserHolder;
 import com.example.crud.dto.LocationDTO;
 import com.example.crud.entity.EmergencyContact;
 import com.example.crud.entity.User;
-import com.example.crud.service.EmailServ;
-import com.example.crud.service.EmergencyContactService;
-import com.example.crud.service.NotificationService;
-import com.example.crud.service.UserService;
+import com.example.crud.service.*;
 import com.example.crud.util.JwtUtil;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.google.firebase.messaging.FirebaseMessagingException;
@@ -31,7 +28,10 @@ public class EmergencyContactController {
     @Autowired
     private Cache<String, Integer> tempUserCache;
     @Autowired
+    private SmsService smsService;
+    @Autowired
     private EmergencyContactRepository emergencyContactRepository;
+
     private NotificationService notificationService;
     @Autowired
     public EmergencyContactController(EmergencyContactService emergencyContactService, UserService userService, JwtUtil jwtUtil, EmailServ emailService,EmergencyContactRepository emergencyContactRepository,NotificationService notificationService) {
@@ -298,6 +298,13 @@ public class EmergencyContactController {
         String mapLink = "https://maps.google.com/?q=" + locationDTO.getLat() + "," + locationDTO.getLng();
 
         emailService.sendEmergencyEmails(user, contacts, mapLink);
+
+        String smsMessage = "🚨 " + user.getFirstName() + " may be in danger. Location: " + mapLink;
+        for (EmergencyContact contact : contacts) {
+            String phone = contact.getPhone().replaceAll("\\D", "");
+            smsService.sendSms(phone, smsMessage);
+        }
+
         return ResponseEntity.ok("Location received and emails sent.");
     }
 
@@ -325,6 +332,6 @@ public class EmergencyContactController {
                 "Sending assistance to your location now",
                 data
         );
+
         return ResponseEntity.ok("Emergency notification sent.");
-    }
-}   
+}   }

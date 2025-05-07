@@ -74,4 +74,9 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
         return emergencyContactRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Emergency contact not found!"));
     }
+
+    public List<EmergencyContact> findByUserId(int userId) {
+        return emergencyContactRepository.findByUserId(userId);
+    }
+
 }

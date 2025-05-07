@@ -15,4 +15,5 @@ public interface EmergencyContactService {
     void deleteContact(int contactId);
     public void notifyUserIfEmailExists(String email, String addedByName, String addedByPhone);
     public boolean existsByEmailAndUser(String email, User user);
+    public List<EmergencyContact> findByUserId(int userId);
 }

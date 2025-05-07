@@ -7,37 +7,29 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 @Component
 public class FirebaseInitializer {
 
     @PostConstruct
-    public void initialize() {
+    public void init() {
         try {
-            String firebaseConfig = System.getenv("FIREBASE_CONFIG");
+            FileInputStream serviceAccount =
+                    new FileInputStream("src/main/resources/firebase-service-account.json");
 
-            if (firebaseConfig != null) {
-                firebaseConfig = firebaseConfig.replace("\\n", "\n");
+            FirebaseOptions options = FirebaseOptions.builder()
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .build();
 
-                InputStream serviceAccount = new ByteArrayInputStream(firebaseConfig.getBytes());
-
-                FirebaseOptions options = new FirebaseOptions.Builder()
-                        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                        .build();
-
-                if (FirebaseApp.getApps().isEmpty()) {
-                    FirebaseApp.initializeApp(options);
-                    System.out.println("Firebase initialized.");
-                } else {
-                    System.out.println("Firebase already initialized.");
-                }
-            } else {
-                System.out.println("FIREBASE_CONFIG not found. Firebase not initialized.");
+            if (FirebaseApp.getApps().isEmpty()) {
+                FirebaseApp.initializeApp(options);
             }
 
-        } catch (Exception e) {
-            System.out.println(" Failed to initialize Firebase: " + e.getMessage());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
