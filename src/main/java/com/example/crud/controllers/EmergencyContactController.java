@@ -305,7 +305,7 @@ public class EmergencyContactController {
             smsService.sendSms(phone, smsMessage);
         }
 
-        return ResponseEntity.ok("Location received and emails sent.");
+        return ResponseEntity.ok("Location received,emails and sms sent.");
     }
 
     @PostMapping("/alert")
