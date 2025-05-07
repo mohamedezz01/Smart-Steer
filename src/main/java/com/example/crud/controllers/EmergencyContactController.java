@@ -27,20 +27,22 @@ public class EmergencyContactController {
     private EmailServ emailService;
     @Autowired
     private Cache<String, Integer> tempUserCache;
+
     @Autowired
     private SmsService smsService;
+
     @Autowired
     private EmergencyContactRepository emergencyContactRepository;
-
     private NotificationService notificationService;
     @Autowired
-    public EmergencyContactController(EmergencyContactService emergencyContactService, UserService userService, JwtUtil jwtUtil, EmailServ emailService,EmergencyContactRepository emergencyContactRepository,NotificationService notificationService) {
+    public EmergencyContactController(EmergencyContactService emergencyContactService, UserService userService, JwtUtil jwtUtil, EmailServ emailService,EmergencyContactRepository emergencyContactRepository,NotificationService notificationService,SmsService smsService) {
         this.emergencyContactService = emergencyContactService;
         this.userService = userService;
         this.jwtUtil = jwtUtil;
         this.emailService = emailService;
         this.emergencyContactRepository=emergencyContactRepository;
         this.notificationService=notificationService;
+        this.smsService=smsService;
     }
 
     //add a new emergency contact
@@ -304,8 +306,7 @@ public class EmergencyContactController {
             String phone = contact.getPhone().replaceAll("\\D", "");
             smsService.sendSms(phone, smsMessage);
         }
-
-        return ResponseEntity.ok("Location received,emails and sms sent.");
+        return ResponseEntity.ok("Location received and emails sent.");
     }
 
     @PostMapping("/alert")
@@ -332,6 +333,6 @@ public class EmergencyContactController {
                 "Sending assistance to your location now",
                 data
         );
-
         return ResponseEntity.ok("Emergency notification sent.");
-}   }
+    }
+}
