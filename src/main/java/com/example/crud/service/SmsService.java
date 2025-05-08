@@ -24,7 +24,7 @@ public class SmsService {
     private final String API_KEY = "e2a5636c74ae5df09d0ea3e79d965034cbac5ac8";
  //   private final String SMS_URL = "https://app.sms8.io/services/sendFront.php?key=e2a5636c74ae5df09d0ea3e79d965034cbac5ac8";
 
-    public boolean sendSms(String to, String messageText, boolean prioritize) {
+    public boolean sendSms(String to, String messageText, boolean prioritize ,String simSlot) {
         String SEND_URL = "https://app.sms8.io/services/send.php";
 
         HttpHeaders headers = new HttpHeaders();
@@ -37,6 +37,10 @@ public class SmsService {
         body.add("devices", "0");
         body.add("type", "sms");
         body.add("prioritize", prioritize ? "1" : "0");
+        if (simSlot != null && !simSlot.isEmpty()) {
+            body.add("simSlot", simSlot); // 👈 Add simSlot only if it's provided
+        }
+
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
 
         try {

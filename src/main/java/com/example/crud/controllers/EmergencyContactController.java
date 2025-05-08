@@ -305,17 +305,11 @@ public class EmergencyContactController {
         String smsMessage = "🚨 " + user.getFirstName() + " may be in danger. Location: " + mapLink;
         for (EmergencyContact contact : contacts) {
             String phone = contact.getPhone()
-                    .replaceAll("\\D", "")       // remove non-digit characters
-                    .replaceFirst("^00", "");    // remove leading 00 if exists
-
-            if (phone.startsWith("0")) {
-                phone = "20" + phone.substring(1);
-            }
+                    .replaceAll("\\D", ""); //remove non-digit characters
 
             System.out.println("📱 Sending SMS to: " + phone);
-            smsService.sendSms(phone, smsMessage,true);
+            smsService.sendSms(phone, smsMessage, true, "0");
         }
-
         return ResponseEntity.ok("Location received and messages sent.");
     }
 
