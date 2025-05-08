@@ -299,10 +299,10 @@ public class EmergencyContactController {
         System.out.println(user.getId());
         List<EmergencyContact> contacts = emergencyContactRepository.findByUser(user);
         String mapLink = "http://maps.google.com/?q=" + locationDTO.getLat() + "," + locationDTO.getLng();
-
         emailService.sendEmergencyEmails(user, contacts, mapLink);
 
-        String smsMessage = "🚨" + user.getFirstName() + " may be in danger. Location: " + mapLink;
+        String mapLink2 = "https://www.google.com/search?q=" + locationDTO.getLat() + "," + locationDTO.getLng();
+        String smsMessage = "🚨" + user.getFirstName() + " may be in danger. Location: " + mapLink2;
         for (EmergencyContact contact : contacts) {
             String phone = contact.getPhone();
             if (phone.startsWith("+20")) {
