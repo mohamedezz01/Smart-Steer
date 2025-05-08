@@ -2,6 +2,7 @@ package com.example.crud.controllers;
 
 import com.example.crud.dto.CarMessageDTO;
 import com.example.crud.dto.EmergencyDTO;
+import com.example.crud.dto.LastEmergencyUserHolder;
 import com.example.crud.entity.User;
 import com.example.crud.service.CarService;
 import com.example.crud.service.NotificationService;
@@ -11,6 +12,8 @@ import com.google.firebase.messaging.FirebaseMessagingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/GP/car")
@@ -58,6 +61,37 @@ public class CarController {
         carService.saveMessage(carMessageDTO.getMessage());
         return ResponseEntity.ok("Message saved successfully.");
     }
+
+//    @PostMapping("/message")
+//    public ResponseEntity<String> saveCarMessage(@RequestBody CarMessageDTO carMessageDTO) throws FirebaseMessagingException {
+//        carService.saveMessage(carMessageDTO.getMessage());
+//
+//        // If the message is accident-related, send an alert
+//        if ("accident".equalsIgnoreCase(carMessageDTO.getMessage())) {
+//            User user = userService.findByDeviceId(carMessageDTO.getDeviceId());
+//
+//            if (user != null && user.getFcmToken() != null) {
+//                Map<String, String> data = Map.of("type", "accident");
+//
+//                // Set user for use in /location if needed
+//                LastEmergencyUserHolder.setUserId(user.getId());
+//
+//                notificationService.sendDataNotification(user.getFcmToken(), data);
+//
+//                notificationService.sendEmergencyNotification(
+//                        user.getFcmToken(),
+//                        "🚨 EMERGENCY DETECTED 🚨",
+//                        "Sending assistance to your location now",
+//                        data
+//                );
+//            } else {
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                        .body("User not found or missing FCM token for deviceId: " + carMessageDTO.getDeviceId());
+//            }
+//        }
+//
+//        return ResponseEntity.ok("Message saved successfully.");
+//    }
 
 
 

@@ -300,21 +300,21 @@ public class EmergencyContactController {
         List<EmergencyContact> contacts = emergencyContactRepository.findByUser(user);
         String mapLink = "https://maps.google.com/?q=" + locationDTO.getLat() + "," + locationDTO.getLng();
 
-       emailService.sendEmergencyEmails(user, contacts, mapLink);
+     //  emailService.sendEmergencyEmails(user, contacts, mapLink);
 
-//        String smsMessage = "🚨 " + user.getFirstName() + " may be in danger. Location: " + mapLink;
-//        for (EmergencyContact contact : contacts) {
-//            String phone = contact.getPhone()
-//                    .replaceAll("\\D", "")       // remove non-digit characters
-//                    .replaceFirst("^00", "");    // remove leading 00 if exists
-//
-//            if (phone.startsWith("0")) {
-//                phone = "20" + phone.substring(1);
-//            }
-//
-//            System.out.println("📱 Sending SMS to: " + phone);
-//            smsService.sendSms(phone, smsMessage);
-//        }
+        String smsMessage = "🚨 " + user.getFirstName() + " may be in danger. Location: " + mapLink;
+        for (EmergencyContact contact : contacts) {
+            String phone = contact.getPhone()
+                    .replaceAll("\\D", "")       // remove non-digit characters
+                    .replaceFirst("^00", "");    // remove leading 00 if exists
+
+            if (phone.startsWith("0")) {
+                phone = "20" + phone.substring(1);
+            }
+
+            System.out.println("📱 Sending SMS to: " + phone);
+            smsService.sendSms(phone, smsMessage);
+        }
 
         return ResponseEntity.ok("Location received and messages sent.");
     }
