@@ -298,11 +298,11 @@ public class EmergencyContactController {
 
         System.out.println(user.getId());
         List<EmergencyContact> contacts = emergencyContactRepository.findByUser(user);
-        String mapLink = "https://maps.google.com/?q=" + locationDTO.getLat() + "," + locationDTO.getLng();
+        String mapLink = "http://maps.google.com/?q=" + locationDTO.getLat() + "," + locationDTO.getLng();
 
      //  emailService.sendEmergencyEmails(user, contacts, mapLink);
 
-        String smsMessage = "🚨" + user.getFirstName() + " may be in danger. Location: ";
+        String smsMessage = "🚨" + user.getFirstName() + " may be in danger. Location: " + mapLink;
         for (EmergencyContact contact : contacts) {
             String phone = contact.getPhone();
             if (phone.startsWith("+20")) {
