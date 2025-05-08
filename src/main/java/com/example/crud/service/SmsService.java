@@ -33,7 +33,7 @@ public class SmsService {
         body.add("number", to);
         body.add("message", messageText);
         body.add("key", API_KEY);
-        body.add("devices", "2779|0");
+        body.add("devices", "[\"2779|0\"]");
         body.add("type", "sms");
         body.add("prioritize", prioritize ? "1" : "0");
 
