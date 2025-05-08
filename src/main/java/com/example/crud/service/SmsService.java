@@ -37,9 +37,7 @@ public class SmsService {
         body.add("devices", "0");
         body.add("type", "sms");
         body.add("prioritize", prioritize ? "1" : "0");
-        if (simSlot != null && !simSlot.isEmpty()) {
-            body.add("simSlot", simSlot); // 👈 Add simSlot only if it's provided
-        }
+        body.add("simSlot", simSlot);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
 

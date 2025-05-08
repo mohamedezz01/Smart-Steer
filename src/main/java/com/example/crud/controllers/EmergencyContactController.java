@@ -302,11 +302,9 @@ public class EmergencyContactController {
 
      //  emailService.sendEmergencyEmails(user, contacts, mapLink);
 
-        String smsMessage = "🚨 " + user.getFirstName() + " may be in danger. Location: " + mapLink;
+        String smsMessage = "🚨" + user.getFirstName() + " may be in danger. Location: " + mapLink;
         for (EmergencyContact contact : contacts) {
-            String phone = contact.getPhone()
-                    .replaceAll("\\D", ""); //remove non-digit characters
-
+            String phone = contact.getPhone();
             System.out.println("📱 Sending SMS to: " + phone);
             smsService.sendSms(phone, smsMessage, true, "0");
         }
