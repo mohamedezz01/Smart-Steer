@@ -302,7 +302,7 @@ public class EmergencyContactController {
 
      //  emailService.sendEmergencyEmails(user, contacts, mapLink);
 
-        String smsMessage = "🚨" + user.getFirstName() + " may be in danger. Location: " + mapLink;
+        String smsMessage = "🚨" + user.getFirstName() + " may be in danger. Location: ";
         for (EmergencyContact contact : contacts) {
             String phone = contact.getPhone();
             if (phone.startsWith("+20")) {
