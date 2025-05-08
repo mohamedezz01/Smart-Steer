@@ -306,7 +306,7 @@ public class EmergencyContactController {
         for (EmergencyContact contact : contacts) {
             String phone = contact.getPhone();
             System.out.println("📱 Sending SMS to: " + phone);
-            smsService.sendSms(phone, smsMessage, true, "0");
+            smsService.sendSms(phone, smsMessage, true);
         }
         return ResponseEntity.ok("Location received and messages sent.");
     }
