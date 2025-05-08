@@ -313,7 +313,7 @@ public class EmergencyContactController {
             }
 
             System.out.println("📱 Sending SMS to: " + phone);
-            smsService.sendSms(phone, smsMessage);
+            smsService.sendSms(phone, smsMessage,true);
         }
 
         return ResponseEntity.ok("Location received and messages sent.");
