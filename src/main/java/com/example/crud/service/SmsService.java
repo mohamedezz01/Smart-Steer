@@ -25,8 +25,7 @@ public class SmsService {
  //   private final String SMS_URL = "https://app.sms8.io/services/sendFront.php?key=e2a5636c74ae5df09d0ea3e79d965034cbac5ac8";
 
     public boolean sendSms(String to, String messageText, boolean prioritize ,String simSlot) {
-        String SEND_URL = "https://app.sms8.io/services/sendFront.php?key=e2a5636c74ae5df09d0ea3e79d965034cbac5ac8";
-
+        String SEND_URL = "https://app.sms8.io/services/send.php";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
