@@ -300,7 +300,7 @@ public class EmergencyContactController {
         List<EmergencyContact> contacts = emergencyContactRepository.findByUser(user);
         String mapLink = "http://maps.google.com/?q=" + locationDTO.getLat() + "," + locationDTO.getLng();
 
-     //  emailService.sendEmergencyEmails(user, contacts, mapLink);
+        emailService.sendEmergencyEmails(user, contacts, mapLink);
 
         String smsMessage = "🚨" + user.getFirstName() + " may be in danger. Location: " + mapLink;
         for (EmergencyContact contact : contacts) {
