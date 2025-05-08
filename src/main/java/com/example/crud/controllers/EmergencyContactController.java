@@ -305,9 +305,14 @@ public class EmergencyContactController {
         String smsMessage = "🚨" + user.getFirstName() + " may be in danger. Location: " + mapLink;
         for (EmergencyContact contact : contacts) {
             String phone = contact.getPhone();
+            if (phone.startsWith("+20")) {
+                phone = phone.replaceFirst("\\+20", "0");
+            }
+
             System.out.println("📱 Sending SMS to: " + phone);
             smsService.sendSms(phone, smsMessage, true);
         }
+
         return ResponseEntity.ok("Location received and messages sent.");
     }
 

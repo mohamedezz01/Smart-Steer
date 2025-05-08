@@ -21,7 +21,7 @@ import java.util.Map;
 public class SmsService {
 
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String API_KEY = "e2a5636c74ae5df09d0ea3e79d965034cbac5ac8";
+    private final String API_KEY = "e4be8594e9d711e778a156783eceb9efcdc587cc";
  //   private final String SMS_URL = "https://app.sms8.io/services/sendFront.php?key=e2a5636c74ae5df09d0ea3e79d965034cbac5ac8";
 
     public boolean sendSms(String to, String messageText, boolean prioritize) {
