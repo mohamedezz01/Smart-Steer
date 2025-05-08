@@ -301,14 +301,13 @@ public class EmergencyContactController {
         String mapLink = "http://maps.google.com/?q=" + locationDTO.getLat() + "," + locationDTO.getLng();
         emailService.sendEmergencyEmails(user, contacts, mapLink);
 
-        String mapLink2 = "https://www.google.com/search?q=" + locationDTO.getLat() + "," + locationDTO.getLng();
-        String smsMessage = "🚨" + user.getFirstName() + " may be in danger. Location: " + mapLink2;
+        String mapLink2 = locationDTO.getLat() + "," + locationDTO.getLng();
+        String smsMessage = "🚨" + user.getFirstName() + " may be in danger. Open Google Maps and search this location: " + mapLink2;
         for (EmergencyContact contact : contacts) {
             String phone = contact.getPhone();
             if (phone.startsWith("+20")) {
                 phone = phone.replaceFirst("\\+20", "0");
             }
-
             System.out.println("📱 Sending SMS to: " + phone);
             smsService.sendSms(phone, smsMessage, true);
         }
