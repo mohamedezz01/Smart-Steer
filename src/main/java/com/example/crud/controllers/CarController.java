@@ -62,6 +62,7 @@ public class CarController {
         return ResponseEntity.ok("Message saved successfully.");
     }
 
+
 //    @PostMapping("/message")
 //    public ResponseEntity<String> saveCarMessage(@RequestBody CarMessageDTO carMessageDTO) throws FirebaseMessagingException {
 //        carService.saveMessage(carMessageDTO.getMessage());

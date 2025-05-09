@@ -20,5 +20,5 @@ public class Car {
     private int id;
 
     @Column(name = "message")
-    private String message;
+    private Long  message;
 }
