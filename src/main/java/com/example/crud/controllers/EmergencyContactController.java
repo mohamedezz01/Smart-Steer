@@ -27,10 +27,8 @@ public class EmergencyContactController {
     private EmailServ emailService;
     @Autowired
     private Cache<String, Integer> tempUserCache;
-
     @Autowired
     private SmsService smsService;
-
     @Autowired
     private EmergencyContactRepository emergencyContactRepository;
     private NotificationService notificationService;
