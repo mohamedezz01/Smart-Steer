@@ -1,5 +1,6 @@
 package com.example.crud.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -18,11 +19,12 @@ import java.util.Map;
 @Service
 public class GitHubService {
 
+    @Value("${github.token}")
+    private String githubToken;
     public String uploadImageToGitHub(MultipartFile file) throws IOException {
         String repoOwner = "mohamedezz01";
         String repoName = "Smart-Steer";
         String branch = "ImageStore";
-        String githubToken = System.getenv("GITHUB_TOKEN");
 
         String filePath = "images/" + file.getOriginalFilename();
 

@@ -4,6 +4,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
@@ -12,11 +13,13 @@ import java.io.InputStream;
 @Component
 public class FirebaseInitializer {
 
+    @Value("${firebase.config}")
+    private String firebaseConfigJson;
+
     @PostConstruct
     public void initialize() {
         try {
-            String firebaseConfig = System.getenv("FIREBASE_CONFIG");
-
+            String firebaseConfig = this.firebaseConfigJson;
             if (firebaseConfig != null) {
                 firebaseConfig = firebaseConfig.replace("\\n", "\n");
 
