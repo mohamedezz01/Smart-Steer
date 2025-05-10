@@ -1,15 +1,25 @@
+
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: [
-      'build',
-      '-f', 'Dockerfile',  # <- remove the leading slash
-      '-t', 'gcr.io/green-carrier-459312/smart-steer',
-      '.'
-    ]
+    id: Build & push # Optional ID for the step
+    args:
+      - 'build'
+      - '-f' # Specifies the Dockerfile path
+      - 'Dockerfile' # Dockerfile is in the root of the repository
+      - '-t' # Tags the image
+      # Tag format for Artifact Registry: REGION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/IMAGE_NAME:TAG
+      # Using _DEPLOY_REGION and PROJECT_ID substitution variables
+      - '${_DEPLOY_REGION}-docker.pkg.dev/${PROJECT_ID}/smart-steer-repo/smart-steer:${SHORT_SHA}'
+      - '.' # Build context is the current directory (root of the repo)
 images:
-  - 'gcr.io/green-carrier-459312/smart-steer'
+
+  - '${_DEPLOY_REGION}-docker.pkg.dev/${PROJECT_ID}/smart-steer-repo/smart-steer:${SHORT_SHA}'
 
 options:
   logging: CLOUD_LOGGING_ONLY
 
+  serviceAccount: 320916769015@cloudbuild.gserviceaccount.com
 
+
+substitutions:
+  _DEPLOY_REGION: europe-west1
