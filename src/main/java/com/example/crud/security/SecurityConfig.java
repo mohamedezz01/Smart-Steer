@@ -39,7 +39,8 @@ public class SecurityConfig {
                                         "/GP/confirm_reset_code",
                                         "/GP/resendForgot",
                                         "/GP/car/message",
-                                        "GP/emergency/location"
+                                        "GP/emergency/location",
+                                        "/GP/car/image"
                                 ).permitAll()
 
                                 .requestMatchers(HttpMethod.GET, "/GP/admin/users").hasAuthority("ROLE_ADMIN")
