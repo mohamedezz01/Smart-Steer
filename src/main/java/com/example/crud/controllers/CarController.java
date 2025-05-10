@@ -35,7 +35,6 @@ public class CarController {
     }
 
 
-
     @PostMapping("/prediction") //image previously
     public ResponseEntity<AIResponse> handleAIprediction(@RequestBody AIResponse aiResponse) throws IOException {
         int predictedActionCode = aiResponse.getAction();
