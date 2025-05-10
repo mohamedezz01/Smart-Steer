@@ -1,0 +1,10 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-f', 'Dockerfile',  # <- remove the leading slash
+      '-t', 'gcr.io/green-carrier-459312/smart-steer',
+      '.'
+    ]
+images:
+  - 'gcr.io/green-carrier-459312/smart-steer'

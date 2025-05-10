@@ -2,25 +2,14 @@ package com.example.crud.controllers;
 
 import com.example.crud.dto.AIResponse;
 import com.example.crud.dto.CarMessageDTO;
-import com.example.crud.dto.EmergencyDTO;
-import com.example.crud.dto.LastEmergencyUserHolder;
-import com.example.crud.entity.User;
 import com.example.crud.service.AIService;
 import com.example.crud.service.CarService;
 import com.example.crud.service.NotificationService;
 import com.example.crud.service.UserService;
-import com.example.crud.util.JwtUtil;
-import com.google.firebase.messaging.FirebaseMessagingException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.Map;
+
 
 @RestController
 @RequestMapping("/GP/car")
@@ -45,14 +34,11 @@ public class CarController {
         return ResponseEntity.ok("Message saved successfully.");
     }
 
-    @PostMapping("/image")
-    public ResponseEntity<AIResponse> handleImageUpload(@RequestParam("image") MultipartFile imageFile) throws IOException {
-        BufferedImage image = ImageIO.read(imageFile.getInputStream());
-
-        // Send to AI module
-        String result = aiService.processImage(image);
-
-        return ResponseEntity.ok(new AIResponse(result));
+    @PostMapping("/prediction")
+    public ResponseEntity<AIResponse> handleAIprediction(@RequestBody AIResponse aiResponse) throws IOException {
+        int predictedActionCode = aiResponse.getAction();
+        System.out.println("Received AI prediction action code: " + predictedActionCode);
+        return ResponseEntity.ok().build();
     }
 
 }
