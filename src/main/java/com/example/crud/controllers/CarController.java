@@ -37,13 +37,10 @@ public class CarController {
     }
 
     @PostMapping("/image")
-    public ResponseEntity<AIResponse> handleImageUpload(@RequestParam("image") MultipartFile imageFile) throws IOException {
-        BufferedImage image = ImageIO.read(imageFile.getInputStream());
-
-        // Send to AI module
-        String result = aiService.processImage(image);
-
-        return ResponseEntity.ok(new AIResponse(result));
+    public ResponseEntity<AIResponse> handleImageUpload(@RequestBody AIResponse aiResponse) throws IOException {
+        int predictedActionCode = aiResponse.getAction();
+        System.out.println("Received AI prediction action code: " + predictedActionCode);
+        return ResponseEntity.ok().build();
     }
 
 }
