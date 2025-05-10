@@ -1,4 +1,5 @@
-
+# This Cloud Build configuration file builds a Docker image
+# from the Dockerfile in the repository and pushes it to Artifact Registry.
 steps:
   - name: 'gcr.io/cloud-builders/docker'
     id: Build & push # Optional ID for the step
@@ -12,14 +13,22 @@ steps:
       - '${_DEPLOY_REGION}-docker.pkg.dev/${PROJECT_ID}/smart-steer-repo/smart-steer:${SHORT_SHA}'
       - '.' # Build context is the current directory (root of the repo)
 images:
-
+  # List the image tags to push to the registry after the build
   - '${_DEPLOY_REGION}-docker.pkg.dev/${PROJECT_ID}/smart-steer-repo/smart-steer:${SHORT_SHA}'
 
 options:
+  # Send build logs to Cloud Logging only to avoid needing a separate logs bucket
   logging: CLOUD_LOGGING_ONLY
+  # Other build options can go here if needed
 
-  serviceAccount: 320916769015@cloudbuild.gserviceaccount.com
+# Explicitly specify the Cloud Build service account for the build.
+# This field is at the top level, not under 'options'.
+# Replace with your actual Cloud Build service account email if using a custom one
+serviceAccount: 320916769015@cloudbuild.gserviceaccount.com # Replace with your project's Cloud Build SA email
 
 
+# Define substitution variables used in the build steps
+# These are automatically provided by Cloud Build when deploying from source to Cloud Run
 substitutions:
-  _DEPLOY_REGION: europe-west1
+  _DEPLOY_REGION: europe-west1 # Ensure this matches your Cloud Run deployment region
+  # PROJECT_ID and SHORT_SHA are standard Cloud Build substitutions
