@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class CarMessageDTO {
-    private Long  message;
+    private String message;
 }
