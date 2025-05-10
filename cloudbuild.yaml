@@ -8,3 +8,8 @@ steps:
     ]
 images:
   - 'gcr.io/green-carrier-459312/smart-steer'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+
