@@ -30,9 +30,11 @@ public class CarController {
 
     @PostMapping("/message")
     public ResponseEntity<String> saveCarMessage(@RequestBody CarMessageDTO carMessageDTO) {
-        carService.saveMessage(carMessageDTO.getMessage());
+        carService.saveMessage(carMessageDTO.getRight(), carMessageDTO.getLeft());
         return ResponseEntity.ok("Message saved successfully.");
     }
+
+
 
     @PostMapping("/prediction") //image previously
     public ResponseEntity<AIResponse> handleAIprediction(@RequestBody AIResponse aiResponse) throws IOException {

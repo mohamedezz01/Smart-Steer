@@ -13,9 +13,10 @@ public class CarService {
         this.carRepository = carRepository;
     }
 
-    public Car saveMessage(Long message) {
+    public Car saveMessage(String right, String left) {
         Car car = new Car();
-        car.setMessage(message);
+        car.setRight(right);
+        car.setLeft(left);
         return carRepository.save(car);
     }
 
