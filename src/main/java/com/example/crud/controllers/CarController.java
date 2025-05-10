@@ -32,7 +32,7 @@ public class CarController {
 
     @PostMapping("/message")
     public ResponseEntity<String> saveCarMessage(@RequestBody CarMessageDTO carMessageDTO) {
-        carService.saveMessage(carMessageDTO.getMessage(), carMessageDTO.getMessage2());
+        carService.saveMessage(carMessageDTO.getRight(), carMessageDTO.getLeft());
         return ResponseEntity.ok("Message saved successfully.");
     }
 

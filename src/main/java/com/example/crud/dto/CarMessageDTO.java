@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class CarMessageDTO {
-    private String message;//right
-    private String message2;//left
+    private String right;//right
+    private String left;//left
 }

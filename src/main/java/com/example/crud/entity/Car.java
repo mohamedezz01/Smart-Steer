@@ -20,10 +20,10 @@ public class Car {
     private int id;
 
     @Column(name = "message")
-    private String message;
+    private String right;
 
     @Column(name = "message2")
-    private String message2;
+    private String left;
 
 
 }
