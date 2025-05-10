@@ -21,4 +21,10 @@ public class Car {
 
     @Column(name = "message")
     private String message;
+
+    @Column(name = "message2")
+    private String message2;
+
+
 }
+
