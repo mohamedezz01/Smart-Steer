@@ -5,5 +5,4 @@ import lombok.Data;
 @Data
 public class CarMessageDTO {
     private String message;
-    private int sensorId;
 }

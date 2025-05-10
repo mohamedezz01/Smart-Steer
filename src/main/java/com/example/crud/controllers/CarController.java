@@ -32,11 +32,9 @@ public class CarController {
 
     @PostMapping("/message")
     public ResponseEntity<String> saveCarMessage(@RequestBody CarMessageDTO carMessageDTO) {
-        carService.saveMessage("Message: " + carMessageDTO.getMessage() +
-                ", Sensor ID: " + carMessageDTO.getSensorId());
-        return ResponseEntity.ok("Message received and saved.");
+        carService.saveMessage(carMessageDTO.getMessage());
+        return ResponseEntity.ok("Message saved successfully.");
     }
-
 
     @PostMapping("/image")
     public ResponseEntity<AIResponse> handleImageUpload(@RequestBody AIResponse aiResponse) throws IOException {
