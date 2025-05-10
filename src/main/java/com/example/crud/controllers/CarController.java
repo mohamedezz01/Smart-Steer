@@ -34,11 +34,10 @@ public class CarController {
         return ResponseEntity.ok("Message saved successfully.");
     }
 
-    @PostMapping("/prediction")
+    @PostMapping("/prediction") //image previously
     public ResponseEntity<AIResponse> handleAIprediction(@RequestBody AIResponse aiResponse) throws IOException {
         int predictedActionCode = aiResponse.getAction();
         System.out.println("Received AI prediction action code: " + predictedActionCode);
         return ResponseEntity.ok().build();
     }
-
 }
