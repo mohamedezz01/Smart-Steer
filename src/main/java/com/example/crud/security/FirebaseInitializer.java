@@ -19,6 +19,7 @@ public class FirebaseInitializer {
     @PostConstruct
     public void initialize() {
         try {
+            System.out.println("FirebaseInitializer: Attempting to load firebase.config secret."); // New log
             String firebaseConfig = this.firebaseConfigJson;
             if (firebaseConfig != null) {
                 firebaseConfig = firebaseConfig.replace("\\n", "\n");

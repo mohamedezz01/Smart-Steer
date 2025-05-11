@@ -31,7 +31,11 @@ public class GitHubService {
         String apiUrl = "https://api.github.com/repos/" + repoOwner + "/" + repoName + "/contents/" + filePath + "?ref=" + branch;
         // Debugging: Print the API URL
         System.out.println("API URL: " + apiUrl);
-
+        if (githubToken != null && !githubToken.isEmpty()) {
+            System.out.println("GitHubService: githubToken is loaded. Length: " + githubToken.length());
+        } else {
+            System.out.println("GitHubService: githubToken is NULL or EMPTY after injection from Secret Manager!");
+        }
         // Fetch the file details to get the SHA (if the file exists)
         String sha = null;
         try {
