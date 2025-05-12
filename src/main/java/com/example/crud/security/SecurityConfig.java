@@ -27,7 +27,7 @@ public class SecurityConfig {
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(configurer ->
                         configurer
-                                .requestMatchers("/ws/**").permitAll()
+                                .requestMatchers("/GP/ws/**").permitAll()
                                 .requestMatchers(HttpMethod.POST,
                                         "/GP/ws/broadcast",
                                         "/GP/ws/closeAll",
