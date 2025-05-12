@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -27,7 +29,6 @@ public class SecurityConfig {
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(configurer ->
                         configurer
-                                .requestMatchers("/GP/ws/**").permitAll()
                                 .requestMatchers(HttpMethod.POST,
                                         "/GP/ws/broadcast",
                                         "/GP/ws/closeAll",
@@ -57,13 +58,9 @@ public class SecurityConfig {
                                         "/GP/settings/serialNumber",
                                         "/GP/resendVerification",
                                         "/GP/settings/uploadProfilePicture",
-                                        "/GP/resendForgot"
+                                        "/GP/resendForgot",
+                                        "/GP/emergency/alert"
                                 ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
-
-                                .requestMatchers(HttpMethod.POST,
-                                        "/GP/emergency/add",
-                                                "GP/emergency/alert"
-                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN", "ROLE_OWNER")
 
                                 .requestMatchers(HttpMethod.GET,
                                         "/GP/users",
@@ -77,12 +74,9 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.PUT,
                                         "/GP/users/**",
                                         "/GP/settings/changeEmail",
-                                        "/GP/settings/changePassword"
-                                ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
-
-                                .requestMatchers(HttpMethod.PUT,
+                                        "/GP/settings/changePassword",
                                         "/GP/emergency/update/{contactId}"
-                                ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN", "ROLE_OWNER")
+                                ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
 
                                 .requestMatchers(HttpMethod.DELETE,
                                         "/GP/users/**",
@@ -100,10 +94,10 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/GP/tech/comments/post/{postId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
                                 .requestMatchers(HttpMethod.GET, "/GP/tech/username").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
                                 .requestMatchers(HttpMethod.DELETE, "/GP/tech/comments/{id}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+
                                 .anyRequest().authenticated()
                 )
-                .httpBasic(Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable());
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -111,6 +105,10 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers("/GP/ws/**");
     }
 
     @Bean
