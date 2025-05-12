@@ -38,9 +38,8 @@ public class SecurityConfig {
                                         "/GP/reset_password",
                                         "/GP/confirm_reset_code",
                                         "/GP/resendForgot",
-                                        "/GP/car/message",
+                                        "/GP/car/ultrasonic",
                                         "GP/emergency/location",
-                                      //  "/GP/car/image",
                                         "/GP/car/prediction"
                                 ).permitAll()
 
