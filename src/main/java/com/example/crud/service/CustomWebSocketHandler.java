@@ -38,48 +38,48 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
         this.emailService = emailService;
         this.emergencyContactRepository=emergencyContactRepository;
     }
-
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         URI uri = session.getUri();
         String query = uri != null ? uri.getQuery() : null;
+        User user = null; // Initialize user to null
 
         if (query != null && query.startsWith("token=")) {
             // --- Handle Token Authentication ---
-            String token = query.substring(6); // Extract token safely inside the check
+            String token = query.substring(6);
             try {
                 String email = jwtUtil.extractEmail(token);
-                User user = userService.findByEmail(email);
+                user = userService.findByEmail(email); // Attempt to find user
 
                 if (user != null) {
                     // Authentication successful
                     session.getAttributes().put("user", user);
-                    sessions.add(session); // Add the authenticated session
                     System.out.println("WebSocket connected (authenticated): " + email + ", SessionID: " + session.getId());
                 } else {
                     // Token was valid, but user doesn't exist in DB
                     System.out.println("Authentication failed: User not found for email " + email + ", SessionID: " + session.getId());
-                    session.close(CloseStatus.NOT_ACCEPTABLE.withReason("User not found"));
-                    // No need to add session if closing
+                    // You might still add the session if anonymous connections are allowed
+                    // or close it if strict authentication is required for ANY interaction
+                    // session.close(CloseStatus.NOT_ACCEPTABLE.withReason("User not found"));
                 }
             } catch (Exception e) {
                 // Token was invalid (expired, malformed, etc.)
                 System.out.println("Authentication failed: Invalid token. " + e.getMessage() + ", SessionID: " + session.getId());
-                session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Invalid token: " + e.getMessage()));
-                // No need to add session if closing
+                // Again, decide whether to add/keep anonymous or close
+                // session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Invalid token: " + e.getMessage()));
             }
         } else {
             // --- Handle Anonymous Connection ---
-            // No token provided or query string is malformed
             System.out.println("WebSocket connected (anonymous), SessionID: " + session.getId());
-            // Decide if anonymous sessions should be tracked.
-            // If anonymous users need to receive broadcasts, add them.
-            // sessions.add(session);
-            // If anonymous connections are not allowed or useful, close them:
-            // session.close(CloseStatus.POLICY_VIOLATION.withReason("Authentication required"));
+            // No token provided or query string is malformed
         }
 
-        // --- NO MORE CODE HERE --- The redundant block is removed.
+        // --- Add the session to the set for broadcasting, regardless of authentication status ---
+        // Only add if you haven't explicitly closed it above
+        if (session.isOpen()) {
+            sessions.add(session);
+            System.out.println("Session added to broadcast set: " + session.getId());
+        }
     }
 
     @Override

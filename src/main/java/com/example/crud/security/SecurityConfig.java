@@ -38,8 +38,17 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                                 .ignoringRequestMatchers(
                                         new AntPathRequestMatcher("/GP/car/prediction"),
-                                        new AntPathRequestMatcher("/GP/car/ultrasonic") // Likely needs ignoring too if called by device
-                                        // Add any other machine-to-machine POST/PUT/DELETE endpoints here
+                                        new AntPathRequestMatcher("/GP/car/ultrasonic"),
+                                        new AntPathRequestMatcher("/GP/signup"),
+                                        new AntPathRequestMatcher("/GP/login"),
+                                        new AntPathRequestMatcher("/GP/verifyEmail"),
+                                        new AntPathRequestMatcher("/GP/forgot_password"),
+                                        new AntPathRequestMatcher("/GP/reset_password"),
+                                        new AntPathRequestMatcher("/GP/confirm_reset_code"),
+                                        new AntPathRequestMatcher("/GP/resendForgot"),
+                                        new AntPathRequestMatcher("/GP/resendVerification"),
+                                        new AntPathRequestMatcher("/GP/ws/broadcast")
+
                                 )
                         // If *all* car endpoints are machine-to-machine, you could use:
                         // .ignoringRequestMatchers(new AntPathRequestMatcher("/GP/car/**"))
