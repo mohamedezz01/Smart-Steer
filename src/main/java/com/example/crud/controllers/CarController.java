@@ -48,6 +48,7 @@ public class CarController {
         }
 
         User user = optionalSn.get().getUser();
+        System.out.println(user.getId());
         if ("0".equals(dto.getLeft()) || "0".equals(dto.getRight())) {
             LastEmergencyUserHolder.setUserId(user.getId());
 
