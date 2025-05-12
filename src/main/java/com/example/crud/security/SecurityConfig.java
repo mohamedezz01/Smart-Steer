@@ -40,7 +40,8 @@ public class SecurityConfig {
                                         "/GP/resendForgot",
                                         "/GP/car/message",
                                         "GP/emergency/location",
-                                        "/GP/car/image"
+                                      //  "/GP/car/image",
+                                        "/GP/car/prediction"
                                 ).permitAll()
 
                                 .requestMatchers(HttpMethod.GET, "/GP/admin/users").hasAuthority("ROLE_ADMIN")
