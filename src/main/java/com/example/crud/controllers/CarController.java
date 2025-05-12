@@ -37,7 +37,7 @@ public class CarController {
     }
 
     @PostMapping("/ultrasonic")//message previously
-    public ResponseEntity<String> saveCarMessage( @RequestHeader("Serial-Number") String serialNumber,@RequestBody CarMessageDTO dto) {
+    public ResponseEntity<String> saveCarMessage( @RequestHeader("serialNumber") String serialNumber,@RequestBody CarMessageDTO dto) {
 
         Optional<SerialNumber> optionalSn = serialNumberRepository.findBySerialNumber(serialNumber);
 
