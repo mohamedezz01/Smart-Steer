@@ -44,10 +44,22 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
         URI uri = session.getUri();
         String query = uri != null ? uri.getQuery() : null;
 
-        if (query == null || !query.startsWith("token=")) {
-            session.close(CloseStatus.BAD_DATA.withReason("Missing or invalid token"));
-            return;
+        if (query != null && query.startsWith("token=")) {
+            String token = query.substring(6);
+            try {
+                String email = jwtUtil.extractEmail(token);
+                User user = userService.findByEmail(email);
+                if (user != null) {
+                    session.getAttributes().put("user", user);
+                    System.out.println("WebSocket connected (authenticated): " + email);
+                }
+            } catch (Exception e) {
+                System.out.println("Invalid token, continuing as anonymous");
+            }
+        } else {
+            System.out.println("WebSocket connected (anonymous)");
         }
+
 
         String token = query.substring(6);
 
