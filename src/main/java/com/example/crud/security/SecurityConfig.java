@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -25,12 +26,27 @@ public class SecurityConfig {
 
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
-
+    @Autowired // Autowire the CorsConfigurationSource bean
+    private CorsConfigurationSource corsConfigurationSource;
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // Apply CORS configuration FIRST
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+
+                // Configure CSRF - Disable for specific paths
+                .csrf(csrf -> csrf
+                                .ignoringRequestMatchers(
+                                        new AntPathRequestMatcher("/GP/car/prediction"),
+                                        new AntPathRequestMatcher("/GP/car/ultrasonic") // Likely needs ignoring too if called by device
+                                        // Add any other machine-to-machine POST/PUT/DELETE endpoints here
+                                )
+                        // If *all* car endpoints are machine-to-machine, you could use:
+                        // .ignoringRequestMatchers(new AntPathRequestMatcher("/GP/car/**"))
+                )
+
                 .authorizeHttpRequests(configurer -> configurer
-                        // Completely bypass WebSocket handshake
+                        // WebSocket
                         .requestMatchers("/GP/ws/**").permitAll()
 
                         // Public POST endpoints

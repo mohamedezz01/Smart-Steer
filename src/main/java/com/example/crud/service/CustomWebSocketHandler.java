@@ -45,40 +45,41 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
         String query = uri != null ? uri.getQuery() : null;
 
         if (query != null && query.startsWith("token=")) {
-            String token = query.substring(6);
+            // --- Handle Token Authentication ---
+            String token = query.substring(6); // Extract token safely inside the check
             try {
                 String email = jwtUtil.extractEmail(token);
                 User user = userService.findByEmail(email);
+
                 if (user != null) {
+                    // Authentication successful
                     session.getAttributes().put("user", user);
-                    System.out.println("WebSocket connected (authenticated): " + email);
+                    sessions.add(session); // Add the authenticated session
+                    System.out.println("WebSocket connected (authenticated): " + email + ", SessionID: " + session.getId());
+                } else {
+                    // Token was valid, but user doesn't exist in DB
+                    System.out.println("Authentication failed: User not found for email " + email + ", SessionID: " + session.getId());
+                    session.close(CloseStatus.NOT_ACCEPTABLE.withReason("User not found"));
+                    // No need to add session if closing
                 }
             } catch (Exception e) {
-                System.out.println("Invalid token, continuing as anonymous");
+                // Token was invalid (expired, malformed, etc.)
+                System.out.println("Authentication failed: Invalid token. " + e.getMessage() + ", SessionID: " + session.getId());
+                session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Invalid token: " + e.getMessage()));
+                // No need to add session if closing
             }
         } else {
-            System.out.println("WebSocket connected (anonymous)");
+            // --- Handle Anonymous Connection ---
+            // No token provided or query string is malformed
+            System.out.println("WebSocket connected (anonymous), SessionID: " + session.getId());
+            // Decide if anonymous sessions should be tracked.
+            // If anonymous users need to receive broadcasts, add them.
+            // sessions.add(session);
+            // If anonymous connections are not allowed or useful, close them:
+            // session.close(CloseStatus.POLICY_VIOLATION.withReason("Authentication required"));
         }
 
-
-        String token = query.substring(6);
-
-        try {
-            String email = jwtUtil.extractEmail(token);
-            User user = userService.findByEmail(email);
-
-            if (user == null) {
-                session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Invalid user"));
-                return;
-            }
-
-            System.out.println("WebSocket connected: " + email);
-            session.getAttributes().put("user", user);
-            sessions.add(session);
-
-        } catch (Exception e) {
-            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Invalid token"));
-        }
+        // --- NO MORE CODE HERE --- The redundant block is removed.
     }
 
     @Override
