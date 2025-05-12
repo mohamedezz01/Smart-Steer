@@ -76,40 +76,23 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
         Map<String, Object> payload = new ObjectMapper().readValue(message.getPayload(), Map.class);
         String type = (String) payload.get("type");
 
-        User user = (User) session.getAttributes().get("user");
+         if ("action".equalsIgnoreCase(type)) {
+            Integer actionValue = (Integer) payload.get("value"); // e.g., 14
 
-        if ("fcm_token".equalsIgnoreCase(type)) {
-            String token = (String) payload.get("token");
-            if (user != null && token != null) {
-                user.setFcmToken(token);
-                userService.save(user);
-                session.sendMessage(new TextMessage("FCM token saved."));
-                System.out.println("FCM token saved for user: " + user.getEmail());
+            if (actionValue != null && actionValue == 14) {
+                // Broadcast "STOP" to all connected clients (cars)
+                for (WebSocketSession s : sessions) {
+                    if (s.isOpen()) {
+                        s.sendMessage(new TextMessage("STOP"));
+                    }
+                }
+                session.sendMessage(new TextMessage("STOP"));
             }
-//        } else if ("accident".equalsIgnoreCase(type)) {
-//            if (user != null && user.getFcm_token() != null) {
-//                notificationService.sendEmergencyNotification(
-//                        user.getFcm_token(),
-//                        "🚨 Emergency Detected!",
-//                        "We detected a possible accident. Sending help!"
-//                );
-//                session.sendMessage(new TextMessage("Emergency notification sent."));
-//            }
-        } else if ("location".equalsIgnoreCase(type)) {
-            Double lat = (Double) payload.get("lat");
-            Double lng = (Double) payload.get("lng");
-
-            if (user != null) {
-                List<EmergencyContact> contacts = emergencyContactRepository.findByUser(user);
-                String googleMapsLink = "https://maps.google.com/?q=" + lat + "," + lng;
-                emailService.sendEmergencyEmails(user, contacts, googleMapsLink);
-                session.sendMessage(new TextMessage("Location shared with emergency contacts."));
-            }
-        } else {
+           else {
             session.sendMessage(new TextMessage("Unknown message type."));
         }
 
-    }
+    }}
 
 
     @Override
