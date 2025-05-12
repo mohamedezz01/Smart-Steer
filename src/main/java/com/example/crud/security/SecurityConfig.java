@@ -47,7 +47,15 @@ public class SecurityConfig {
                                         new AntPathRequestMatcher("/GP/confirm_reset_code"),
                                         new AntPathRequestMatcher("/GP/resendForgot"),
                                         new AntPathRequestMatcher("/GP/resendVerification"),
-                                        new AntPathRequestMatcher("/GP/ws/broadcast")
+                                        new AntPathRequestMatcher("/GP/ws/broadcast"),
+                                        new AntPathRequestMatcher("/GP/emergency/alert"),
+                                        new AntPathRequestMatcher("/GP/emergency/add"),
+                                        new AntPathRequestMatcher("/GP/emergency/list"),
+                                        new AntPathRequestMatcher("/GP/settings/logout"),
+                                        new AntPathRequestMatcher("/GP/settings/verify_delAcc"),
+                                        new AntPathRequestMatcher("/GP/settings/confirmCurrentEmail"),
+                                        new AntPathRequestMatcher("/GP/fcm-token")
+
 
                                 )
                         // If *all* car endpoints are machine-to-machine, you could use:

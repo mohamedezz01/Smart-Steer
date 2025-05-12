@@ -96,10 +96,10 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
                 // Broadcast "STOP" to all connected clients (cars)
                 for (WebSocketSession s : sessions) {
                     if (s.isOpen()) {
-                        s.sendMessage(new TextMessage("STOP"));
+                        s.sendMessage(new TextMessage("stop"));
                     }
                 }
-                session.sendMessage(new TextMessage("STOP"));
+                session.sendMessage(new TextMessage("stop"));
             }
             else {
                 session.sendMessage(new TextMessage("Unknown message type."));
