@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,7 +18,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.List;
+
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     @Autowired
@@ -26,78 +30,64 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(configurer ->
-                        configurer
-                                .requestMatchers(HttpMethod.POST,
-                                        "/GP/ws/broadcast",
-                                        "/GP/ws/closeAll",
-                                        "/GP/signup",
-                                        "/GP/login",
-                                        "/GP/verifyEmail",
-                                        "/GP/forgot_password",
-                                        "/GP/reset_password",
-                                        "/GP/confirm_reset_code",
-                                        "/GP/resendForgot",
-                                        "/GP/car/ultrasonic",
-                                        "GP/emergency/location",
-                                        "/GP/car/prediction"
-                                ).permitAll()
+                .cors(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(configurer -> configurer
+                        // Completely bypass WebSocket handshake
+                        .requestMatchers("/GP/ws/**").permitAll()
 
-                                .requestMatchers(HttpMethod.GET, "/GP/admin/users").hasAuthority("ROLE_ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/GP/admin/users/{Id}").hasAuthority("ROLE_ADMIN")
+                        // Public POST endpoints
+                        .requestMatchers(HttpMethod.POST,
+                                "/GP/ws/broadcast", "/GP/ws/closeAll", "/GP/signup", "/GP/login",
+                                "/GP/verifyEmail", "/GP/forgot_password", "/GP/reset_password",
+                                "/GP/confirm_reset_code", "/GP/resendForgot", "/GP/car/ultrasonic",
+                                "/GP/emergency/location", "/GP/car/prediction"
+                        ).permitAll()
 
-                                .requestMatchers(HttpMethod.POST,
-                                        "/GP/emergency/add",
-                                        "/GP/settings/logout",
-                                        "/GP/settings/verify_delAcc",
-                                        "/GP/settings/confirmCurrentEmail",
-                                        "/GP/settings/verifyCurrentEmail",
-                                        "/GP/settings/sendNewEmailVerification",
-                                        "/GP/settings/confirmNewEmail",
-                                        "/GP/settings/serialNumber",
-                                        "/GP/resendVerification",
-                                        "/GP/settings/uploadProfilePicture",
-                                        "/GP/resendForgot",
-                                        "/GP/emergency/alert"
-                                ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                        // Admin-only
+                        .requestMatchers(HttpMethod.GET, "/GP/admin/users").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/GP/admin/users/{Id}").hasAuthority("ROLE_ADMIN")
 
-                                .requestMatchers(HttpMethod.GET,
-                                        "/GP/users",
-                                        "/GP/users/**",
-                                        "/GP/emergency/list",
-                                        "/GP/settings/email",
-                                        "/GP/settings/profilePicture",
-                                        "/GP/tech/profilePicture/byPost"
-                                ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                        // Authenticated endpoints
+                        .requestMatchers(HttpMethod.POST,
+                                "/GP/emergency/add", "/GP/emergency/alert", "/GP/settings/logout",
+                                "/GP/settings/verify_delAcc", "/GP/settings/confirmCurrentEmail",
+                                "/GP/settings/verifyCurrentEmail", "/GP/settings/sendNewEmailVerification",
+                                "/GP/settings/confirmNewEmail", "/GP/settings/serialNumber",
+                                "/GP/resendVerification", "/GP/settings/uploadProfilePicture"
+                        ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
 
-                                .requestMatchers(HttpMethod.PUT,
-                                        "/GP/users/**",
-                                        "/GP/settings/changeEmail",
-                                        "/GP/settings/changePassword",
-                                        "/GP/emergency/update/{contactId}"
-                                ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                        .requestMatchers(HttpMethod.GET,
+                                "/GP/users", "/GP/users/**", "/GP/emergency/list",
+                                "/GP/settings/email", "/GP/settings/profilePicture",
+                                "/GP/tech/profilePicture/byPost"
+                        ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
 
-                                .requestMatchers(HttpMethod.DELETE,
-                                        "/GP/users/**",
-                                        "/GP/emergency/delete/{contactId}",
-                                        "/GP/settings/confirm_delAcc"
-                                ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                        .requestMatchers(HttpMethod.PUT,
+                                "/GP/users/**", "/GP/settings/changeEmail",
+                                "/GP/settings/changePassword", "/GP/emergency/update/{contactId}"
+                        ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
 
-                                .requestMatchers(HttpMethod.POST, "/GP/tech/posts").hasAnyAuthority("ROLE_ADMIN","ROLE_USER","ROLE_OWNER")
-                                .requestMatchers(HttpMethod.GET, "/GP/tech/posts").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
-                                .requestMatchers(HttpMethod.GET, "/GP/tech/posts/{id}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
-                                .requestMatchers(HttpMethod.DELETE, "/GP/tech/posts/{id}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
-                                .requestMatchers(HttpMethod.POST, "/GP/tech/likes").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
-                                .requestMatchers(HttpMethod.DELETE, "/GP/tech/likes/{postId}/{userId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
-                                .requestMatchers(HttpMethod.POST, "/GP/tech/comments").hasAnyAuthority("ROLE_ADMIN", "ROLE_OWNER","ROLE_USER")
-                                .requestMatchers(HttpMethod.GET, "/GP/tech/comments/post/{postId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
-                                .requestMatchers(HttpMethod.GET, "/GP/tech/username").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
-                                .requestMatchers(HttpMethod.DELETE, "/GP/tech/comments/{id}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/GP/users/**", "/GP/emergency/delete/{contactId}",
+                                "/GP/settings/confirm_delAcc"
+                        ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
 
-                                .anyRequest().authenticated()
+                        // Tech Post Feature
+                        .requestMatchers(HttpMethod.POST, "/GP/tech/posts").hasAnyAuthority("ROLE_ADMIN", "ROLE_USER", "ROLE_OWNER")
+                        .requestMatchers(HttpMethod.GET, "/GP/tech/posts", "/GP/tech/posts/{id}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                        .requestMatchers(HttpMethod.DELETE, "/GP/tech/posts/{id}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                        .requestMatchers(HttpMethod.POST, "/GP/tech/likes").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                        .requestMatchers(HttpMethod.DELETE, "/GP/tech/likes/{postId}/{userId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                        .requestMatchers(HttpMethod.POST, "/GP/tech/comments").hasAnyAuthority("ROLE_ADMIN", "ROLE_OWNER", "ROLE_USER")
+                        .requestMatchers(HttpMethod.GET, "/GP/tech/comments/post/{postId}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                        .requestMatchers(HttpMethod.GET, "/GP/tech/username").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+                        .requestMatchers(HttpMethod.DELETE, "/GP/tech/comments/{id}").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
+
+                        .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+                .httpBasic(Customizer.withDefaults());
 
         return http.build();
     }
@@ -106,20 +96,20 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/GP/ws/**");
-    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOriginPattern("*");
-        configuration.addAllowedMethod("*");
-        configuration.addAllowedHeader("*");
-        configuration.setAllowCredentials(true);
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of("*")); // For dev only
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", config);
         return source;
+    }
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers("/GP/ws/**");
     }
 }
