@@ -1,3 +1,4 @@
+
 package com.example.crud.security;
 
 import com.example.crud.service.CustomWebSocketHandler;
@@ -18,7 +19,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(webSocketHandler, "/ws")
+        // Change this path to match your SecurityConfig
+        registry.addHandler(webSocketHandler, "/GP/ws") // <--- CHANGED HERE
                 .setAllowedOrigins("*"); // allow all during dev — restrict in prod
     }
 }

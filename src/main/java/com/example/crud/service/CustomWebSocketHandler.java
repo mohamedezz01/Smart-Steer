@@ -1,3 +1,5 @@
+
+
 package com.example.crud.service;
 
 import com.example.crud.dao.EmergencyContactRepository;
@@ -38,34 +40,47 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
         this.emailService = emailService;
         this.emergencyContactRepository=emergencyContactRepository;
     }
-
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         URI uri = session.getUri();
         String query = uri != null ? uri.getQuery() : null;
+        User user = null; // Initialize user to null
 
-        if (query == null || !query.startsWith("token=")) {
-            session.close(CloseStatus.BAD_DATA.withReason("Missing or invalid token"));
-            return;
+        if (query != null && query.startsWith("token=")) {
+            // --- Handle Token Authentication ---
+            String token = query.substring(6);
+            try {
+                String email = jwtUtil.extractEmail(token);
+                user = userService.findByEmail(email); // Attempt to find user
+
+                if (user != null) {
+                    // Authentication successful
+                    session.getAttributes().put("user", user);
+                    System.out.println("WebSocket connected (authenticated): " + email + ", SessionID: " + session.getId());
+                } else {
+                    // Token was valid, but user doesn't exist in DB
+                    System.out.println("Authentication failed: User not found for email " + email + ", SessionID: " + session.getId());
+                    // You might still add the session if anonymous connections are allowed
+                    // or close it if strict authentication is required for ANY interaction
+                    // session.close(CloseStatus.NOT_ACCEPTABLE.withReason("User not found"));
+                }
+            } catch (Exception e) {
+                // Token was invalid (expired, malformed, etc.)
+                System.out.println("Authentication failed: Invalid token. " + e.getMessage() + ", SessionID: " + session.getId());
+                // Again, decide whether to add/keep anonymous or close
+                // session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Invalid token: " + e.getMessage()));
+            }
+        } else {
+            // --- Handle Anonymous Connection ---
+            System.out.println("WebSocket connected (anonymous), SessionID: " + session.getId());
+            // No token provided or query string is malformed
         }
 
-        String token = query.substring(6);
-
-        try {
-            String email = jwtUtil.extractEmail(token);
-            User user = userService.findByEmail(email);
-
-            if (user == null) {
-                session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Invalid user"));
-                return;
-            }
-
-            System.out.println("WebSocket connected: " + email);
-            session.getAttributes().put("user", user);
+        // --- Add the session to the set for broadcasting, regardless of authentication status ---
+        // Only add if you haven't explicitly closed it above
+        if (session.isOpen()) {
             sessions.add(session);
-
-        } catch (Exception e) {
-            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Invalid token"));
+            System.out.println("Session added to broadcast set: " + session.getId());
         }
     }
 
@@ -76,40 +91,23 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
         Map<String, Object> payload = new ObjectMapper().readValue(message.getPayload(), Map.class);
         String type = (String) payload.get("type");
 
-        User user = (User) session.getAttributes().get("user");
+        if ("action".equalsIgnoreCase(type)) {
+            Integer actionValue = (Integer) payload.get("value"); // e.g., 14
 
-        if ("fcm_token".equalsIgnoreCase(type)) {
-            String token = (String) payload.get("token");
-            if (user != null && token != null) {
-                user.setFcmToken(token);
-                userService.save(user);
-                session.sendMessage(new TextMessage("FCM token saved."));
-                System.out.println("FCM token saved for user: " + user.getEmail());
+            if (actionValue != null && actionValue == 14) {
+                // Broadcast "STOP" to all connected clients (cars)
+                for (WebSocketSession s : sessions) {
+                    if (s.isOpen()) {
+                        s.sendMessage(new TextMessage("stop"));
+                    }
+                }
+                session.sendMessage(new TextMessage("stop"));
             }
-//        } else if ("accident".equalsIgnoreCase(type)) {
-//            if (user != null && user.getFcm_token() != null) {
-//                notificationService.sendEmergencyNotification(
-//                        user.getFcm_token(),
-//                        "🚨 Emergency Detected!",
-//                        "We detected a possible accident. Sending help!"
-//                );
-//                session.sendMessage(new TextMessage("Emergency notification sent."));
-//            }
-        } else if ("location".equalsIgnoreCase(type)) {
-            Double lat = (Double) payload.get("lat");
-            Double lng = (Double) payload.get("lng");
-
-            if (user != null) {
-                List<EmergencyContact> contacts = emergencyContactRepository.findByUser(user);
-                String googleMapsLink = "https://maps.google.com/?q=" + lat + "," + lng;
-                emailService.sendEmergencyEmails(user, contacts, googleMapsLink);
-                session.sendMessage(new TextMessage("Location shared with emergency contacts."));
+            else {
+                session.sendMessage(new TextMessage("Unknown message type."));
             }
-        } else {
-            session.sendMessage(new TextMessage("Unknown message type."));
-        }
 
-    }
+        }}
 
 
     @Override

@@ -1,3 +1,5 @@
+
+
 package com.example.crud.security;
 
 import com.example.crud.dto.JwtRequestFilter;
@@ -27,7 +29,7 @@ public class SecurityConfig {
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(configurer ->
                         configurer
-                                .requestMatchers("/ws/**").permitAll()
+                                .requestMatchers("/GP/ws/**").permitAll()
                                 .requestMatchers(HttpMethod.POST,
                                         "/GP/ws/broadcast",
                                         "/GP/ws/closeAll",
@@ -39,7 +41,11 @@ public class SecurityConfig {
                                         "/GP/confirm_reset_code",
                                         "/GP/resendForgot",
                                         "/GP/car/message",
-                                        "GP/emergency/location"
+                                        "GP/emergency/location",
+                                        "/GP/car/image",
+                                        "/GP/car/prediction",
+                                        "/GP/car/ultrasonic"
+
                                 ).permitAll()
 
                                 .requestMatchers(HttpMethod.GET, "/GP/admin/users").hasAuthority("ROLE_ADMIN")
@@ -61,7 +67,7 @@ public class SecurityConfig {
 
                                 .requestMatchers(HttpMethod.POST,
                                         "/GP/emergency/add",
-                                                "GP/emergency/alert"
+                                        "GP/emergency/alert"
                                 ).hasAnyAuthority("ROLE_USER","ROLE_ADMIN", "ROLE_OWNER")
 
                                 .requestMatchers(HttpMethod.GET,
@@ -124,3 +130,4 @@ public class SecurityConfig {
         return source;
     }
 }
+
