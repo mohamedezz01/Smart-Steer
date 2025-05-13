@@ -12,11 +12,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 @Configuration
-public class FirebaseInitializer { // Renamed from FirebaseConfig, which is fine
+public class FirebaseInitializer {
 
-    // Reads the value from the environment variable FIREBASE_CREDENTIALS_PATH
-    // (which Spring maps to the firebase.credentials.path property)
-    // Uses E:\firebase-admin-sdk.json as a default if the env var isn't set (e.g., locally)
     @Value("${firebase.credentials.path:E:\\firebase-admin-sdk.json}")
     private String firebaseCredentialsPath;
 
