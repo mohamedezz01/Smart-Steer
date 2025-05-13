@@ -47,6 +47,13 @@ public class CarController {
         if (optionalSn.isEmpty() || optionalSn.get().getUser() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or unassigned serial number.");
         }
+        System.out.println("Received serialNumber: " + serialNumber);
+        System.out.println("Hashed serialNumber: " + hashSHA256(serialNumber));
+        System.out.println("Serials in DB:");
+        serialNumberRepository.findAll().forEach(sn -> {
+            System.out.println("  " + sn.getSerialNumber() + " => User: " + (sn.getUser() != null ? sn.getUser().getId() : "null"));
+        });
+
 
         User user = optionalSn.get().getUser();
         System.out.println(user.getId());
