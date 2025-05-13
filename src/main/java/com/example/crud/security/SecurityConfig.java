@@ -27,7 +27,7 @@ public class SecurityConfig {
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(configurer ->
                         configurer
-                                .requestMatchers("/ws/**").permitAll()
+                                .requestMatchers("/GP/ws/**").permitAll()
                                 .requestMatchers(HttpMethod.POST,
                                         "/GP/ws/broadcast",
                                         "/GP/ws/closeAll",
@@ -41,7 +41,8 @@ public class SecurityConfig {
                                         "/GP/car/message",
                                         "GP/emergency/location",
                                         "/GP/car/image",
-                                        "/GP/car/prediction"
+                                        "/GP/car/prediction",
+                                        "/GP/car/ultrasonic"
 
                                 ).permitAll()
 
