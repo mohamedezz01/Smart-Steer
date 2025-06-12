@@ -23,7 +23,6 @@ public class SerialNumber {
 
     @Column(name = "assigned", columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean assigned;
-
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User user;
