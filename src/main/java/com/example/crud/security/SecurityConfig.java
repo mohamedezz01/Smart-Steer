@@ -62,7 +62,8 @@ public class SecurityConfig {
                                         "/GP/settings/serialNumber",
                                         "/GP/resendVerification",
                                         "/GP/settings/uploadProfilePicture",
-                                        "/GP/resendForgot"
+                                        "/GP/resendForgot",
+                                        "/GP/fcm-token"
                                 ).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN", "ROLE_OWNER")
 
                                 .requestMatchers(HttpMethod.POST,
