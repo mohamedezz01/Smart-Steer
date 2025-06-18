@@ -85,17 +85,16 @@ public class CarController {
         int predictedActionCode = aiResponse.getAction();
         System.out.println("Received AI prediction action code: " + predictedActionCode);
 
-        if (predictedActionCode == 14) {
-            try {
-                webSocketHandler.broadcast("stop");
-                System.out.println("STOP command broadcasted to cars.");
-            } catch (IOException e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-            }
+        try {
+            webSocketHandler.broadcast("stop");
+            System.out.println("STOP command broadcasted to cars.");
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
         return ResponseEntity.ok().build();
     }
+
     private String hashSHA256(String input) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
