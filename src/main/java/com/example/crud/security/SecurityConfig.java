@@ -44,7 +44,8 @@ public class SecurityConfig {
                                         "GP/emergency/location",
                                         "/GP/car/image",
                                         "/GP/car/prediction",
-                                        "/GP/car/ultrasonic"
+                                        "/GP/car/ultrasonic",
+                                        "GP/resendVerification"
 
                                 ).permitAll()
 
