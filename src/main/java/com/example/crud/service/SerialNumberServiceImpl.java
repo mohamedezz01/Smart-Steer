@@ -43,6 +43,12 @@ public class SerialNumberServiceImpl implements SerialNumberService {
         }
 
         SerialNumber serial = serialNumberOpt.get();
+
+        if (serial.isAssigned()) {
+            response.put("message", "This serial number has already been assigned.");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        }
+
         serial.setAssigned(true);
         serial.setUser(user);
         serialNumberRepository.save(serial);

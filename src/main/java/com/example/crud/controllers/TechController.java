@@ -307,7 +307,6 @@ public class TechController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }
     }
-
     @GetMapping(value = "/profilePicture/byPost", produces = MediaType.IMAGE_JPEG_VALUE)
     public ResponseEntity<byte[]> getProfilePictureByPostId(@RequestParam("postId") int postId) {
         Optional<Posts> postOptional = postService.getPostById(postId);

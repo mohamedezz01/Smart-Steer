@@ -447,6 +447,7 @@ public class SettingsRestController {
             return ResponseEntity.badRequest().body(response);
         }
 
+
         return serialNumberService.assignSerialNumber(serialNumberRequest.getSerialNumber(), user);
     }
 
